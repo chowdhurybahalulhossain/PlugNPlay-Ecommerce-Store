@@ -1,0 +1,170 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #0A0A10;
+    --surface: #15151E;
+    --surface-hover: #1D1D29;
+    --border: #24242E;
+    --text: #F2F2F5;
+    --text-muted: #8C8C99;
+    --accent: #7C5CFF;
+    --accent-soft: #7C5CFF33;
+    --price: #FFB020;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+}
+
+h1, h2, .logo { font-family: 'Space Grotesk', sans-serif; }
+
+a { color: inherit; text-decoration: none; }
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 48px;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,16,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+}
+.logo { font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+.navbar nav a {
+    margin-left: 32px;
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: color 0.2s;
+}
+.navbar nav a:hover { color: var(--text); }
+
+/* Hero */
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 100px 48px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 40px;
+}
+.hero-copy h1 {
+    font-size: 56px;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.hero-copy p {
+    color: var(--text-muted);
+    font-size: 17px;
+    max-width: 380px;
+    margin: 20px 0 32px;
+}
+.btn-primary {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 13px 26px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 15px;
+    transition: background 0.2s, transform 0.2s;
+}
+.btn-primary:hover { background: #6A4CEF; transform: translateY(-1px); }
+
+/* Hero orb (pure CSS, single orchestrated animation) */
+.hero-orb {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.orb-core {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #A78BFF, var(--accent) 60%, #4B2FCC);
+    box-shadow: 0 0 60px 10px var(--accent-soft);
+}
+.orb-ring {
+    position: absolute;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    animation: spin 14s linear infinite;
+}
+.ring-1 { width: 170px; height: 170px; border-top-color: var(--accent); }
+.ring-2 { width: 260px; height: 260px; border-bottom-color: var(--accent); animation-duration: 22s; animation-direction: reverse; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .orb-ring { animation: none; }
+}
+
+/* Products */
+.container { padding: 20px 48px 100px; max-width: 1200px; margin: 0 auto; }
+.container h2 { font-size: 26px; margin-bottom: 28px; }
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.product-card {
+    background: var(--surface);
+    padding: 28px 24px;
+    transition: background 0.2s;
+}
+.product-card:hover { background: var(--surface-hover); }
+
+.product-thumb {
+    width: 100%;
+    aspect-ratio: 4/3;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1D1D2E, #2A1F3D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin-bottom: 18px;
+}
+.product-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.product-card .category { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+.product-card .price { color: var(--price); font-weight: 700; font-size: 17px; margin-bottom: 16px; }
+
+.btn-add {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+.btn-add:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+@media (max-width: 720px) {
+    .hero { flex-direction: column; text-align: left; padding-top: 60px; }
+    .hero-copy h1 { font-size: 40px; }
+    .hero-orb { width: 180px; height: 180px; }
+    .ring-2 { width: 180px; height: 180px; }
+    .ring-1 { width: 120px; height: 120px; }
+    .navbar { padding: 18px 24px; }
+    .container { padding: 20px 24px 60px; }
+}

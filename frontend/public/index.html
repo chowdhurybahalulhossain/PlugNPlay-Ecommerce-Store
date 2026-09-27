@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlugNPlay-Ecommerce Store</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">PlugNPlay</a>
+        <nav>
+            <a href="index.html">Shop</a>
+            <a href="cart.html">Cart</a>
+            <a href="orders.html">Orders</a>
+            <a href="login.html" id="authLink">Sign in</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-copy">
+            <h1>Power up<br>your setup.</h1>
+            <p>Keyboards, mice, and everyday gear — picked for people who actually use their desk.</p>
+            <a href="#products" class="btn-primary">Browse gear</a>
+        </div>
+        <div class="hero-orb" aria-hidden="true">
+            <div class="orb-core"></div>
+            <div class="orb-ring ring-1"></div>
+            <div class="orb-ring ring-2"></div>
+        </div>
+    </section>
+
+    <main class="container" id="products">
+        <h2>Featured products</h2>
+        <div id="productGrid" class="product-grid"></div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>

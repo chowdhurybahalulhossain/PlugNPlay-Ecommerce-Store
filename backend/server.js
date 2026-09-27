@@ -8,10 +8,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Test route
-app.get('/', (req, res) => {
-    res.send('🛒 E-commerce API is running...');
-});
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../frontend/public')));
 
 const productRoutes = require('./routes/productRoutes');
 app.use('/api/products', productRoutes);
