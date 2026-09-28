@@ -1,43 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PlugNPlay-Ecommerce Store</title>
+<title>PlugNPlay — Ecommerce Store</title>
+<script>
+    // Apply saved theme before paint to avoid a flash
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header class="navbar">
-        <a href="index.html" class="logo">PlugNPlay</a>
-        <nav>
+    <header class="nav">
+        <a href="index.html" class="logo"><span class="logo-mark"></span>PlugNPlay</a>
+
+        <div class="nav-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input type="search" id="searchInput" placeholder="Search gear" aria-label="Search products">
+        </div>
+
+        <nav class="nav-links">
             <a href="index.html">Shop</a>
-            <a href="cart.html">Cart</a>
             <a href="orders.html">Orders</a>
+            <a href="cart.html" class="cart-link">Cart <span class="badge" id="cartCount" hidden>0</span></a>
             <a href="login.html" id="authLink">Sign in</a>
+            <button class="theme-toggle" id="themeToggle" aria-label="Switch theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+            </button>
         </nav>
     </header>
 
-    <section class="hero">
-        <div class="hero-copy">
-            <h1>Power up<br>your setup.</h1>
-            <p>Keyboards, mice, and everyday gear — picked for people who actually use their desk.</p>
-            <a href="#products" class="btn-primary">Browse gear</a>
-        </div>
-        <div class="hero-orb" aria-hidden="true">
-            <div class="orb-core"></div>
-            <div class="orb-ring ring-1"></div>
-            <div class="orb-ring ring-2"></div>
+    <section class="hero spot" data-spotlight>
+        <div class="layer dots" aria-hidden="true"></div>
+        <div class="layer word ghost" aria-hidden="true">PLUGNPLAY</div>
+        <div class="layer word lit" aria-hidden="true">PLUGNPLAY</div>
+
+        <div class="hero-content">
+            <h1>Gear that<br>lights up<br>your desk.</h1>
+            <p>Keyboards, mice, and everyday tech for the way you work.</p>
+            <div class="hero-actions">
+                <a href="#shop" class="btn">Shop the collection</a>
+                <a href="orders.html" class="btn btn-ghost">Track an order</a>
+            </div>
         </div>
     </section>
 
-    <main class="container" id="products">
-        <h2>Featured products</h2>
-        <div id="productGrid" class="product-grid"></div>
+    <main class="shop" id="shop">
+        <div class="shop-head">
+            <h2>Shop</h2>
+            <div class="controls">
+                <div class="chips" id="chips"></div>
+                <select class="sort" id="sortSelect" aria-label="Sort products">
+                    <option value="new">Newest</option>
+                    <option value="low">Price: low to high</option>
+                    <option value="high">Price: high to low</option>
+                </select>
+            </div>
+        </div>
+        <p class="result-count" id="resultCount"></p>
+        <div class="grid" id="productGrid"></div>
     </main>
 
+    <footer class="footer">
+        <span>PlugNPlay</span>
+        <span>Built with Node.js, Express, PostgreSQL and Stripe</span>
+    </footer>
+
+    <dialog class="modal" id="quickView">
+        <div class="modal-inner">
+            <button class="modal-close" id="qvClose" aria-label="Close">×</button>
+            <div class="qv-art" id="qvArt"></div>
+            <div class="qv-info">
+                <p class="cat" id="qvCat"></p>
+                <h3 id="qvName"></h3>
+                <p class="qv-desc" id="qvDesc"></p>
+                <p class="qv-stock" id="qvStock"></p>
+                <div class="qv-row">
+                    <div class="stepper">
+                        <button id="qvMinus" aria-label="Decrease quantity">−</button>
+                        <span id="qvQty">1</span>
+                        <button id="qvPlus" aria-label="Increase quantity">+</button>
+                    </div>
+                    <span class="price" id="qvPrice"></span>
+                </div>
+                <button class="btn" id="qvAdd">Add to cart</button>
+            </div>
+        </div>
+    </dialog>
+
     <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/home.js"></script>
 </body>
 </html>
