@@ -289,13 +289,14 @@ html[data-theme="light"] .icon-sun {
 }
 
 .word {
-    left: 0;
-    right: 0;
-    bottom: clamp(16px, 4vh, 40px);
-    text-align: center;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: clamp(52px, 10vw, 190px);
+    font-size: clamp(32px, 9vw, 170px);
     line-height: 1;
     letter-spacing: -0.04em;
     white-space: nowrap;
@@ -315,15 +316,16 @@ html[data-theme="light"] .icon-sun {
 /* ---------- Hero ---------- */
 .hero {
     min-height: calc(100vh - 68px);
-    padding: clamp(48px, 9vh, 110px) 40px clamp(70px, 14vh, 160px);
+    padding: clamp(28px, 6vh, 56px) 40px 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
 }
 
 .hero-content {
     position: relative;
     z-index: 2;
     max-width: 640px;
+    flex: 0 0 auto;
 }
 
 .hero h1 {
@@ -345,6 +347,16 @@ html[data-theme="light"] .icon-sun {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.word-row {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 70px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
 }
 
 /* ---------- Shop ---------- */
