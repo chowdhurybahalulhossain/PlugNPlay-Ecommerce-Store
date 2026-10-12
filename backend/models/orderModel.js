@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 
-const createOrder = async (userId, totalAmount, shippingAddress, stripePaymentId) => {
-    const result = await pool.query(
+const createOrder = async (userId, totalAmount, shippingAddress, stripePaymentId, client = pool) => {
+    const result = await client.query(
         `INSERT INTO orders (user_id, total_amount, shipping_address, stripe_payment_id, status)
          VALUES ($1, $2, $3, $4, 'paid') RETURNING *`,
         [userId, totalAmount, shippingAddress, stripePaymentId]
@@ -9,16 +9,23 @@ const createOrder = async (userId, totalAmount, shippingAddress, stripePaymentId
     return result.rows[0];
 };
 
-const addOrderItem = async (orderId, productId, quantity, priceAtPurchase) => {
-    await pool.query(
+const addOrderItem = async (orderId, productId, quantity, priceAtPurchase, client = pool) => {
+    await client.query(
         `INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
          VALUES ($1, $2, $3, $4)`,
         [orderId, productId, quantity, priceAtPurchase]
     );
 };
 
-const clearCart = async (userId) => {
-    await pool.query('DELETE FROM cart_items WHERE user_id = $1', [userId]);
+const decrementStock = async (productId, quantity, client = pool) => {
+    await client.query(
+        'UPDATE products SET stock_quantity = stock_quantity - $1 WHERE id = $2',
+        [quantity, productId]
+    );
+};
+
+const clearCart = async (userId, client = pool) => {
+    await client.query('DELETE FROM cart_items WHERE user_id = $1', [userId]);
 };
 
 const getOrdersByUser = async (userId) => {
@@ -29,4 +36,4 @@ const getOrdersByUser = async (userId) => {
     return result.rows;
 };
 
-module.exports = { createOrder, addOrderItem, clearCart, getOrdersByUser };
+module.exports = { createOrder, addOrderItem, decrementStock, clearCart, getOrdersByUser };
