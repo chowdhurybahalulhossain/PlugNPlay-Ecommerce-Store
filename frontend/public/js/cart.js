@@ -15,9 +15,13 @@ const ICON = svg('<rect x="26" y="26" width="44" height="44" rx="8"/><rect x="38
 
 const itemHTML = (item) => `
     <div class="cart-item" data-id="${item.id}">
-        <div class="thumb">${ICON}</div>
+        <div class="thumb">
+            ${item.image_url 
+                ? `<img src="${esc(item.image_url)}" alt="${esc(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` 
+                : ICON}
+        </div>
         <div>
-            <h3>${esc(item.name)}</h3>
+            <h3><a href="product.html?id=${item.product_id}" style="color:inherit;text-decoration:none;">${esc(item.name)}</a></h3>
             <p class="unit-price">${money(item.price)} each</p>
         </div>
         <div class="stepper">

@@ -56,10 +56,17 @@ const stockTag = (p) => {
     return '';
 };
 
+const imageOrIcon = (p) => {
+    if (p.image_url) {
+        return `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="card-img" loading="lazy">`;
+    }
+    return iconFor(p);
+};
+
 const cardHTML = (p) => `
-    <article class="card" data-id="${p.id}" tabindex="0">
+    <article class="card" data-id="${p.id}" tabindex="0" style="cursor: pointer;">
         ${stockTag(p)}
-        <div class="card-art">${iconFor(p)}</div>
+        <div class="card-art">${imageOrIcon(p)}</div>
         <div class="card-body">
             <p class="cat">${esc(p.category)}</p>
             <h3>${esc(p.name)}</h3>
@@ -169,10 +176,14 @@ gridEl.addEventListener('click', (e) => {
     const addBtn = e.target.closest('[data-add]');
     if (addBtn) return addToCart(Number(addBtn.dataset.add));
     const card = e.target.closest('.card');
-    if (card) openQuickView(Number(card.dataset.id));
+    if (card) {
+        window.location.href = `product.html?id=${card.dataset.id}`;
+    }
 });
 gridEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.classList.contains('card')) openQuickView(Number(e.target.dataset.id));
+    if (e.key === 'Enter' && e.target.classList.contains('card')) {
+        window.location.href = `product.html?id=${e.target.dataset.id}`;
+    }
 });
 
 // 3D tilt on cards (only for devices with hover, and not with reduced motion)

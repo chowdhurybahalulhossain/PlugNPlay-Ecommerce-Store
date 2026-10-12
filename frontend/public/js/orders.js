@@ -55,7 +55,11 @@ const orderHTML = (order) => `
 
 const itemHTML = (item) => `
     <div class="order-item-row">
-        <div class="order-item-thumb">${ITEM_ICON}</div>
+        <div class="order-item-thumb">
+            ${item.image_url 
+                ? `<img src="${esc(item.image_url)}" alt="${esc(item.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` 
+                : ITEM_ICON}
+        </div>
         <div>
             <p class="order-item-name">${esc(item.name)}</p>
             <span class="order-item-unit">${money(item.price_at_purchase)} each</span>
