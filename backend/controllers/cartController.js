@@ -25,8 +25,10 @@ const addItem = async (req, res) => {
 
 const updateItem = async (req, res) => {
     try {
+        const userId = req.user.id;
         const { quantity } = req.body;
-        const item = await updateCartItem(req.params.id, quantity);
+        const item = await updateCartItem(req.params.id, userId, quantity);
+        if (!item) return res.status(404).json({ error: 'Cart item not found' });
         res.json(item);
     } catch (err) {
         console.error(err);
@@ -36,7 +38,9 @@ const updateItem = async (req, res) => {
 
 const deleteItem = async (req, res) => {
     try {
-        await removeCartItem(req.params.id);
+        const userId = req.user.id;
+        const deleted = await removeCartItem(req.params.id, userId);
+        if (!deleted) return res.status(404).json({ error: 'Cart item not found' });
         res.json({ message: 'Item removed from cart' });
     } catch (err) {
         console.error(err);

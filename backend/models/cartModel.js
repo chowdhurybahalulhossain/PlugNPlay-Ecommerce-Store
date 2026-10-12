@@ -33,16 +33,20 @@ const addToCart = async (userId, productId, quantity) => {
     }
 };
 
-const updateCartItem = async (cartItemId, quantity) => {
+const updateCartItem = async (cartItemId, userId, quantity) => {
     const result = await pool.query(
-        'UPDATE cart_items SET quantity = $1 WHERE id = $2 RETURNING *',
-        [quantity, cartItemId]
+        'UPDATE cart_items SET quantity = $1 WHERE id = $2 AND user_id = $3 RETURNING *',
+        [quantity, cartItemId, userId]
     );
     return result.rows[0];
 };
 
-const removeCartItem = async (cartItemId) => {
-    await pool.query('DELETE FROM cart_items WHERE id = $1', [cartItemId]);
+const removeCartItem = async (cartItemId, userId) => {
+    const result = await pool.query(
+        'DELETE FROM cart_items WHERE id = $1 AND user_id = $2 RETURNING *',
+        [cartItemId, userId]
+    );
+    return result.rows[0];
 };
 
 module.exports = { getCartByUser, addToCart, updateCartItem, removeCartItem };
