@@ -5,13 +5,21 @@ const { createOrder, addOrderItem, decrementStock, clearCart } = require('../mod
 const checkout = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { shippingAddress, paymentMethodId } = req.body;
+        // paymentType: 'card' | 'cod'
+        // paymentMethodId: only required for 'card' payments
+        const { shippingAddress, paymentType, paymentMethodId } = req.body;
 
         if (!shippingAddress) {
-            return res.status(400).json({ error: 'Shipping address is required' });
+            return res.status(400).json({ error: 'Shipping address is required.' });
+        }
+        if (!paymentType || !['card', 'cod'].includes(paymentType)) {
+            return res.status(400).json({ error: 'A valid payment method (card or cod) is required.' });
+        }
+        if (paymentType === 'card' && !paymentMethodId) {
+            return res.status(400).json({ error: 'Card details are required for card payment.' });
         }
 
-        // Get user's cart items with product details
+        // --- Fetch cart items with product details ---
         const cartResult = await pool.query(
             `SELECT c.product_id, c.quantity, p.name, p.price, p.stock_quantity
              FROM cart_items c
@@ -22,10 +30,10 @@ const checkout = async (req, res) => {
         const cartItems = cartResult.rows;
 
         if (cartItems.length === 0) {
-            return res.status(400).json({ error: 'Cart is empty' });
+            return res.status(400).json({ error: 'Your cart is empty.' });
         }
 
-        // Validate stock availability before charging payment
+        // --- Validate stock before doing anything financial ---
         for (const item of cartItems) {
             if (item.stock_quantity < item.quantity) {
                 return res.status(400).json({
@@ -34,25 +42,32 @@ const checkout = async (req, res) => {
             }
         }
 
-        // Calculate total
+        // --- Calculate total amount ---
         const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        // Create Stripe Payment Intent (amount in cents)
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(totalAmount * 100),
-            currency: 'usd',
-            payment_method: paymentMethodId,
-            confirm: true,
-            automatic_payment_methods: { enabled: true, allow_redirects: 'never' }
-        });
+        // --- Payment Path ---
+        let stripePaymentId = null;
 
-        // Run DB operations in an atomic transaction
+        if (paymentType === 'card') {
+            // Charge via Stripe (amount in smallest currency unit — cents/paisa)
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: Math.round(totalAmount * 100),
+                currency: 'usd',
+                payment_method: paymentMethodId,
+                confirm: true,
+                automatic_payment_methods: { enabled: true, allow_redirects: 'never' }
+            });
+            stripePaymentId = paymentIntent.id;
+        }
+        // COD: No payment gateway needed. Order is saved with 'pending' status.
+
+        // --- Atomic DB Transaction ---
         const client = await pool.connect();
         let order;
         try {
             await client.query('BEGIN');
 
-            order = await createOrder(userId, totalAmount, shippingAddress, paymentIntent.id, client);
+            order = await createOrder(userId, totalAmount, shippingAddress, paymentType, stripePaymentId, client);
 
             for (const item of cartItems) {
                 await addOrderItem(order.id, item.product_id, item.quantity, item.price, client);
@@ -69,11 +84,17 @@ const checkout = async (req, res) => {
             client.release();
         }
 
-        res.status(201).json({ message: 'Order placed successfully', order, paymentIntent });
+        res.status(201).json({
+            message: paymentType === 'cod'
+                ? 'Order placed! Pay on delivery.'
+                : 'Payment successful! Order confirmed.',
+            order
+        });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Checkout failed', details: err.message });
+        console.error('Checkout Error:', err);
+        res.status(500).json({ error: 'Checkout failed.', details: err.message });
     }
 };
 
-module.exports = { checkout };
+module.exports = { checkout };

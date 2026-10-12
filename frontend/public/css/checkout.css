@@ -1,44 +1,384 @@
-.checkout-page { max-width: 1100px; margin: 0 auto; padding: 56px 40px 100px; }
-.checkout-page h1 {
-    font-family: var(--font-display);
-    font-size: clamp(28px, 4vw, 42px);
-    letter-spacing: -0.03em;
-    margin-bottom: 32px;
+/* =====================================================
+   CHECKOUT PAGE — Premium Payment UI
+   ===================================================== */
+
+.checkout-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
 }
 
-.checkout-form {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.checkout-header {
+    margin-bottom: 2.5rem;
 }
-.checkout-form h2 { font-size: 16px; font-weight: 700; margin: 10px 0 4px; }
-.checkout-form h2:first-child { margin-top: 0; }
-.checkout-form label { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 700; color: var(--muted); }
-.checkout-form textarea {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px 16px;
+
+.checkout-header h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+}
+
+.checkout-subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+/* ---- Section Layout ---- */
+.checkout-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+    transition: border-color 0.2s;
+}
+
+.checkout-section:focus-within {
+    border-color: var(--accent);
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-heading h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0;
+}
+
+.step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+/* ---- Shipping Fields ---- */
+.field-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.field-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.95rem;
     color: var(--text);
-    font: 500 15px var(--font-body);
     resize: vertical;
     transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
 }
-.checkout-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--glow); }
 
-.pay-card { background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-.pay-row { display: flex; align-items: center; gap: 14px; }
-.pay-row svg { width: 28px; height: 28px; color: var(--accent); flex-shrink: 0; }
-.pay-title { font-weight: 700; font-size: 14px; }
-.pay-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px hsl(var(--accent-hsl, 262 85% 58%) / 0.15);
+}
 
-.checkout-form .btn { margin-top: 10px; }
-.summary-line { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; color: var(--muted); }
+/* ---- Payment Options Grid ---- */
+.payment-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
 
-@media (max-width: 760px) {
-    .checkout-page { padding: 32px 20px 72px; }
+@media (max-width: 600px) {
+    .payment-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- Payment Card (selectable) ---- */
+.payment-card {
+    position: relative;
+    cursor: pointer;
+    border-radius: 1rem;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    display: block;
+    user-select: none;
+}
+
+.payment-card:hover:not(.payment-card--disabled) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px hsl(262 85% 58% / 0.12);
+}
+
+/* hide the native radio */
+.payment-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Active/selected state */
+.payment-card:has(input[type="radio"]:checked) {
+    border-color: var(--accent);
+    background: hsl(262 85% 58% / 0.06);
+    box-shadow: 0 0 0 1px var(--accent), 0 8px 24px hsl(262 85% 58% / 0.15);
+}
+
+.payment-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+}
+
+/* Payment icon circle */
+.payment-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.payment-icon svg {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.cod-icon   { background: hsl(142 71% 45% / 0.15); color: hsl(142 71% 45%); }
+.card-icon  { background: hsl(217 91% 60% / 0.15); color: hsl(217 91% 60%); }
+.bkash-icon { background: hsl(333 80% 50% / 0.15); color: hsl(333 80% 50%); }
+.nagad-icon { background: hsl(25 95% 55% / 0.15);  color: hsl(25 95% 55%); }
+.rocket-icon{ background: hsl(280 70% 55% / 0.15); color: hsl(280 70% 55%); }
+
+.payment-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.payment-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.payment-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.4;
+}
+
+/* Checkmark — visible only when selected */
+.payment-check {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    color: transparent;
+}
+
+.payment-check svg {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+.payment-card:has(input[type="radio"]:checked) .payment-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* ---- Disabled cards (Coming Soon) ---- */
+.payment-card--disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    border-style: dashed;
+}
+
+.payment-card--disabled:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border);
+}
+
+.soon-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: hsl(262 85% 58% / 0.15);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ---- Card Details Panel ---- */
+.card-details-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s;
+    opacity: 0;
+}
+
+.card-details-panel.visible {
+    max-height: 200px;
+    opacity: 1;
+}
+
+.card-details-inner {
+    padding: 1rem;
+    background: var(--bg);
+    border: 1.5px dashed var(--border);
+    border-radius: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.test-card-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    background: hsl(217 91% 60% / 0.08);
+    border-radius: 0.6rem;
+    padding: 0.75rem;
+    margin-bottom: 0.6rem;
+}
+
+.test-card-hint svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+    color: hsl(217 91% 60%);
+    margin-top: 0.05rem;
+}
+
+.test-card-hint strong {
+    color: hsl(217 91% 60%);
+    font-family: monospace;
+    letter-spacing: 0.05em;
+}
+
+.card-field-note {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+/* ---- Checkout Submit Button ---- */
+.btn-checkout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 1rem;
+    margin-top: 0.5rem;
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    letter-spacing: 0.01em;
+}
+
+.btn-checkout svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform 0.2s;
+}
+
+.btn-checkout:hover:not(:disabled) {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px hsl(262 85% 58% / 0.35);
+}
+
+.btn-checkout:hover:not(:disabled) svg {
+    transform: translateX(3px);
+}
+
+.btn-checkout:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ---- Order Summary Sidebar extras ---- */
+.summary-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1rem 0;
+}
+
+.summary-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    padding: 0.45rem 0;
+    color: var(--text);
+}
+
+.summary-line span:last-child {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.secure-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.secure-badge svg {
+    width: 1rem;
+    height: 1rem;
+    color: hsl(142 71% 45%);
+    flex-shrink: 0;
 }

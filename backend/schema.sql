@@ -42,9 +42,21 @@ CREATE TABLE IF NOT EXISTS orders (
     total_amount NUMERIC(10, 2) NOT NULL,
     shipping_address TEXT NOT NULL,
     stripe_payment_id VARCHAR(255),
-    status VARCHAR(50) DEFAULT 'paid', -- 'paid', 'shipped', 'delivered', 'cancelled'
+    payment_method VARCHAR(50) DEFAULT 'card', -- 'card', 'cod'
+    status VARCHAR(50) DEFAULT 'paid', -- 'paid', 'pending', 'shipped', 'delivered', 'cancelled'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration: Add payment_method column if this table already exists (safe to run multiple times)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'orders' AND column_name = 'payment_method'
+    ) THEN
+        ALTER TABLE orders ADD COLUMN payment_method VARCHAR(50) DEFAULT 'card';
+    END IF;
+END $$;
 
 -- 5. Order Items Table
 CREATE TABLE IF NOT EXISTS order_items (
