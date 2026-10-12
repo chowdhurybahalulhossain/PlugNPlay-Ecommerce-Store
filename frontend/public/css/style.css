@@ -796,6 +796,27 @@ html[data-theme="light"] .icon-sun {
     }
 }
 
+/* Admin Link Badge in Navigation */
+.admin-link-badge {
+    color: var(--accent) !important;
+    font-weight: 800 !important;
+    background: hsl(262 85% 58% / 0.12);
+    border: 1px solid hsl(262 85% 58% / 0.35);
+    padding: 0.35rem 0.75rem !important;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+}
+
+.admin-link-badge:hover {
+    background: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px hsl(262 85% 58% / 0.4);
+    transform: translateY(-1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;

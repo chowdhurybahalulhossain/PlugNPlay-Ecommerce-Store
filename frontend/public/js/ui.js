@@ -89,9 +89,33 @@ const initSpotlight = (el) => {
     requestAnimationFrame(tick);
 };
 
+// Display Admin Portal link in navbar if user has admin role
+const initAdminNav = () => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.role === 'admin') {
+            const nav = document.querySelector('.nav-links');
+            if (nav && !document.getElementById('adminNavLink')) {
+                const adminLink = document.createElement('a');
+                adminLink.id = 'adminNavLink';
+                adminLink.href = 'admin.html';
+                adminLink.className = 'admin-link-badge';
+                adminLink.innerHTML = '⚡ Admin';
+                const authLink = document.getElementById('authLink');
+                if (authLink) {
+                    nav.insertBefore(adminLink, authLink);
+                } else {
+                    nav.appendChild(adminLink);
+                }
+            }
+        }
+    } catch (e) {}
+};
+
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     setTheme(getTheme() === 'dark' ? 'light' : 'dark');
 });
 document.querySelectorAll('[data-spotlight]').forEach(initSpotlight);
 initAuthLink();
+initAdminNav();
 updateCartCount();

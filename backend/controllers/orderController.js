@@ -42,10 +42,31 @@ const viewOrderDetails = async (req, res) => {
 
 const viewAllOrders = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+        const result = await pool.query(
+            `SELECT o.*, 
+                    u.name AS user_name, 
+                    u.email AS user_email,
+                    COALESCE(
+                        json_agg(
+                            json_build_object(
+                                'product_id', oi.product_id,
+                                'quantity', oi.quantity,
+                                'price_at_purchase', oi.price_at_purchase,
+                                'product_name', p.name,
+                                'product_image', p.image_url
+                            )
+                        ) FILTER (WHERE oi.id IS NOT NULL), '[]'
+                    ) AS items
+             FROM orders o
+             JOIN users u ON o.user_id = u.id
+             LEFT JOIN order_items oi ON o.id = oi.order_id
+             LEFT JOIN products p ON oi.product_id = p.id
+             GROUP BY o.id, u.name, u.email
+             ORDER BY o.created_at DESC`
+        );
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching admin orders:', err);
         res.status(500).json({ error: 'Failed to fetch all orders' });
     }
 };
