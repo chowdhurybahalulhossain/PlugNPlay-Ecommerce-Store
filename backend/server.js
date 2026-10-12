@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
@@ -8,7 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const path = require('path');
 app.use(express.static(path.join(__dirname, '../frontend/public')));
 
 const productRoutes = require('./routes/productRoutes');
