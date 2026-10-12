@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 
 <head>
@@ -21,16 +21,7 @@
     <header class="nav">
         <a href="index.html" class="logo"><span class="logo-mark"></span>PlugNPlay</a>
 
-        <div class="nav-search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-            </svg>
-            <input type="search" id="searchInput" placeholder="Search gear" aria-label="Search products">
-        </div>
-
-        <nav class="nav-links">
+        <nav class="nav-links" style="margin-left: auto;">
             <a href="index.html">Shop</a>
             <a href="orders.html">Orders</a>
             <a href="cart.html" class="cart-link">Cart <span class="badge" id="cartCount" hidden>0</span></a>
@@ -53,32 +44,102 @@
     <section class="hero spot" data-spotlight>
         <div class="layer dots" aria-hidden="true"></div>
 
-        <div class="hero-content">
-            <h1>Gear that<br>lights up<br>your desk.</h1>
-            <p>Keyboards, mice, and everyday tech for the way you work.</p>
-            <div class="hero-actions">
-                <a href="#shop" class="btn">Shop the collection</a>
-                <a href="orders.html" class="btn btn-ghost">Track an order</a>
+        <div class="hero-top">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span>
+                    FEATURED GEAR & DROPS
+                </div>
+                <h1>Gear that<br>lights up<br>your desk.</h1>
+                
+                <div class="hero-actions">
+                    <a href="#shop" class="btn">Explore All Gear</a>
+                    <a href="orders.html" class="btn btn-ghost">Track Order</a>
+                </div>
+
+                <!-- Category jump pills (without label) -->
+                <div class="hero-cat-pills">
+                    <button type="button" class="hero-pill" data-jump-cat="Keyboard">⌨️ Keyboards</button>
+                    <button type="button" class="hero-pill" data-jump-cat="Mouse">🖱️ Mice</button>
+                    <button type="button" class="hero-pill" data-jump-cat="Audio">🎧 Audio</button>
+                    <button type="button" class="hero-pill" data-jump-cat="Lighting">💡 Lighting</button>
+                </div>
+            </div>
+
+            <!-- Right Side: Horizontal Illuminated "PLUGNPLAY" Brand Art + Tagline Quote -->
+            <div class="hero-brand-wrap">
+                <div class="word-box" aria-hidden="true">
+                    <div class="word ghost">PLUGNPLAY</div>
+                    <div class="word lit">PLUGNPLAY</div>
+                </div>
+                <p class="brand-quote">“Premium peripherals for the ones who feel every click.”</p>
             </div>
         </div>
-        <div class="word-row" aria-hidden="true">
-            <div class="word ghost">PLUGNPLAY</div>
-            <div class="word lit">PLUGNPLAY</div>
-        </div>
+
+        <!-- Scroll down indicator -->
+        <a href="#shop" class="scroll-cue" aria-label="Scroll to browse products">
+            <span>Scroll to browse gear</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+        </a>
     </section>
 
     <main class="shop" id="shop">
         <div class="shop-head">
-            <h2>Shop</h2>
-            <div class="controls">
+            <div class="shop-title-group">
+                <h2>Explore Gear</h2>
+                <p class="shop-sub">High-performance mechanical keyboards, lightweight mice, and studio acoustics.</p>
+            </div>
+
+            <!-- Shop Toolbar -->
+            <div class="shop-toolbar">
+                <!-- In-Shop Live Search -->
+                <div class="shop-search-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="shopSearchInput" placeholder="Search keyboards, audio, accessories..." aria-label="Search catalog">
+                    <button type="button" class="btn-clear-search" id="clearSearchBtn" hidden aria-label="Clear search">&times;</button>
+                </div>
+
+                <!-- Sort & In-Stock Controls -->
+                <div class="toolbar-controls">
+                    <button type="button" class="btn-filter-pill" id="inStockToggle" aria-pressed="false">
+                        <span class="pill-dot"></span>
+                        In Stock Only
+                    </button>
+
+                    <div class="select-wrap">
+                        <select class="sort" id="sortSelect" aria-label="Sort products">
+                            <option value="new">✨ Newest</option>
+                            <option value="low">📉 Price: Low to High</option>
+                            <option value="high">📈 Price: High to Low</option>
+                            <option value="alpha">🔤 Name: A to Z</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Chips & Price Filter Bar -->
+            <div class="filter-bar">
                 <div class="chips" id="chips"></div>
-                <select class="sort" id="sortSelect" aria-label="Sort products">
-                    <option value="new">Newest</option>
-                    <option value="low">Price: low to high</option>
-                    <option value="high">Price: high to low</option>
-                </select>
+
+                <!-- Price Quick Filters -->
+                <div class="price-pills" id="pricePills">
+                    <button type="button" class="price-pill active" data-max="all">All Prices</button>
+                    <button type="button" class="price-pill" data-max="3000">Under ৳3,000</button>
+                    <button type="button" class="price-pill" data-min="3000" data-max="6000">৳3k — ৳6k</button>
+                    <button type="button" class="price-pill" data-min="6000">Above ৳6,000</button>
+                </div>
+            </div>
+
+            <!-- Active Filters Bar & Reset -->
+            <div class="active-filters-bar" id="activeFiltersBar" hidden>
+                <span class="active-label">Active filters:</span>
+                <div class="active-tags" id="activeTags"></div>
+                <button type="button" class="btn-reset-filters" id="resetFiltersBtn">Reset All</button>
             </div>
         </div>
+
         <p class="result-count" id="resultCount"></p>
         <div class="grid" id="productGrid"></div>
     </main>
