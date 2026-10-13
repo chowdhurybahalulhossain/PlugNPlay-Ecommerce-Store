@@ -1164,16 +1164,283 @@ html[data-theme="light"] .icon-sun {
     color: #fff;
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Unified Premium Site Footer ---------- */
+.site-footer,
 .footer {
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+    margin-top: auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.site-footer::before,
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.6;
+}
+
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 64px 32px 44px;
+    display: grid;
+    grid-template-columns: 2fr 1.1fr 1.2fr 1.6fr;
+    gap: 44px;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-brand .footer-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    color: var(--text);
+    transition: transform 0.2s ease;
+}
+
+.footer-brand .footer-logo:hover {
+    transform: translateX(2px);
+}
+
+.footer-tagline {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.65;
+    margin-bottom: 20px;
+    max-width: 340px;
+}
+
+.footer-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.f-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.footer-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li a {
+    color: var(--muted);
+    font-size: 13.5px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.footer-links li a:hover {
+    color: var(--accent);
+    transform: translateX(4px);
+}
+
+.footer-newsletter-desc {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 16px;
+}
+
+.footer-newsletter-desc strong {
+    color: var(--accent);
+}
+
+.footer-newsletter-form {
+    margin-bottom: 18px;
+}
+
+.f-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 5px 4px 16px;
+    transition: all 0.2s ease;
+}
+
+.f-input-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 4px 16px var(--glow);
+}
+
+.f-input-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    flex: 1;
+    min-width: 0;
+}
+
+.f-input-wrap input::placeholder {
+    color: var(--muted);
+    opacity: 0.7;
+}
+
+.f-submit-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+
+.f-submit-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.f-submit-btn:hover {
+    transform: scale(1.08);
+}
+
+.footer-payments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pay-tag {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    border-top: 1px solid var(--line);
+    padding: 22px 32px;
+    background: var(--bg);
+}
+
+.footer-bottom-inner {
+    max-width: 1200px;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
-    gap: 16px;
+    align-items: center;
     flex-wrap: wrap;
-    padding: 28px 40px;
-    border-top: 1px solid var(--line);
+    gap: 16px;
+}
+
+.footer-copy {
     color: var(--muted);
-    font-size: 14px;
+    font-size: 12.5px;
+    margin: 0;
+}
+
+.footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.social-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    display: grid;
+    place-items: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.social-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.social-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    background: var(--ghost);
+}
+
+/* Responsive Footer */
+@media (max-width: 960px) {
+    .footer-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        padding: 48px 24px 36px;
+    }
+}
+
+@media (max-width: 580px) {
+    .footer-inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 40px 20px 28px;
+    }
+
+    .footer-bottom-inner {
+        flex-direction: column;
+        text-align: center;
+        gap: 14px;
+    }
 }
 
 /* ---------- Responsive ---------- */

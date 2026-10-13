@@ -112,10 +112,28 @@ const initAdminNav = () => {
     } catch (e) {}
 };
 
+// Footer Newsletter handler
+const initFooterNewsletter = () => {
+    const form = document.getElementById('footerNewsletterForm');
+    if (!form) return;
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('footerEmailInput');
+        const email = input?.value?.trim();
+        if (!email || !email.includes('@')) {
+            showToast('Please enter a valid email address', 'error');
+            return;
+        }
+        showToast('🎉 Subscribed! Use code PLUG10 for 10% off', 'info');
+        if (input) input.value = '';
+    });
+};
+
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     setTheme(getTheme() === 'dark' ? 'light' : 'dark');
 });
 document.querySelectorAll('[data-spotlight]').forEach(initSpotlight);
 initAuthLink();
 initAdminNav();
+initFooterNewsletter();
 updateCartCount();
