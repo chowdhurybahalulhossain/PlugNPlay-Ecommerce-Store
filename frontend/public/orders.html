@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Orders — PlugNPlay</title>
+<title>My Orders — PlugNPlay</title>
+<meta name="description" content="Track and view your PlugNPlay order history, status updates, and purchase details.">
 <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
 </script>
@@ -29,11 +30,17 @@
     </header>
 
     <main class="orders-page">
-        <h1>Your Orders</h1>
-        <p class="orders-subtitle" id="ordersSubtitle">Track and view your past purchases.</p>
-
+        <div class="orders-header">
+            <h1>Your Orders</h1>
+            <p class="orders-subtitle" id="ordersSubtitle">Track and view your past purchases.</p>
+        </div>
         <div class="orders-list" id="ordersList"></div>
     </main>
+
+    <footer class="footer">
+        <span>PlugNPlay</span>
+        <span>Built with Node.js, Express, PostgreSQL and Stripe</span>
+    </footer>
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>

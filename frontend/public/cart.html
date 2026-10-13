@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cart — PlugNPlay</title>
+<meta name="description" content="Review your selected gear before checkout. Keyboards, mice, audio, and more.">
 <script>
     document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
 </script>
@@ -29,19 +30,39 @@
     </header>
 
     <main class="cart-page">
-        <h1>Your cart</h1>
+        <div class="cart-page-header">
+            <h1>Your Cart</h1>
+            <span class="cart-item-count" id="cartItemCount" hidden></span>
+        </div>
+
         <div class="cart-layout">
             <div class="cart-list" id="cartList"></div>
 
             <aside class="cart-summary">
-                <h2>Order summary</h2>
+                <h2>Order Summary</h2>
                 <div class="row"><span>Subtotal</span><span id="subtotal">৳0</span></div>
                 <div class="row muted"><span>Shipping</span><span>Calculated at checkout</span></div>
+                <div class="cart-free-ship">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                    Free delivery on all orders
+                </div>
                 <div class="row total"><span>Total</span><span id="totalAmount">৳0</span></div>
-                <a href="checkout.html" class="btn" id="checkoutBtn">Proceed to checkout</a>
+                <a href="checkout.html" class="btn" id="checkoutBtn">
+                    Proceed to Checkout
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
             </aside>
         </div>
     </main>
+
+    <footer class="footer">
+        <span>PlugNPlay</span>
+        <span>Built with Node.js, Express, PostgreSQL and Stripe</span>
+    </footer>
 
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
