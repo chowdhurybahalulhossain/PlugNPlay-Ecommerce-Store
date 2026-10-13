@@ -117,39 +117,145 @@ const loadProductDetails = async () => {
         return;
     }
 
-    try {
-        currentProduct = await apiRequest(`/products/${productId}`);
-        document.title = `${currentProduct.name} — PlugNPlay`;
+    // Show skeleton while loading
+    document.getElementById('productLayout').innerHTML = `
+        <div class="product-skeleton">
+            <div class="skel-img"></div>
+            <div class="skel-lines">
+                <div class="skel-line short"></div>
+                <div class="skel-line wide"></div>
+                <div class="skel-line med"></div>
+                <div class="skel-line full"></div>
+                <div class="skel-line full"></div>
+                <div class="skel-line wide"></div>
+            </div>
+        </div>`;
 
+    try {
+        // Rebuild the layout (skeleton was replaced)
+        document.getElementById('productLayout').innerHTML = `
+            <div class="product-gallery">
+                <div class="main-image-wrap" id="mainImageWrap">
+                    <img id="productImage" src="" alt="" class="main-product-img" style="display:none">
+                </div>
+            </div>
+            <div class="product-details" id="productDetails"></div>`;
+
+        // Re-query elements after re-render
+        const productImage2    = document.getElementById('productImage');
+        const mainImageWrap2   = document.getElementById('mainImageWrap');
+        const productDetails   = document.getElementById('productDetails');
+
+        document.title = `${currentProduct.name} — PlugNPlay`;
         bcCategory.textContent = currentProduct.category || 'Gear';
         bcName.textContent = currentProduct.name;
-        productCategory.textContent = currentProduct.category || 'Gear';
-        productTitle.textContent = currentProduct.name;
-        productPrice.textContent = money(currentProduct.price);
-        originalPrice.textContent = money(Math.round(currentProduct.price * 1.15));
-        productDescription.textContent = currentProduct.description || 'Premium gear built for high performance and daily reliability.';
 
-        // Stock badge
-        if (currentProduct.stock_quantity <= 0) {
-            stockBadge.textContent = 'Sold out';
-            stockBadge.className = 'stock-pill sold-out';
-            addToCartBtn.disabled = true;
-            buyNowBtn.disabled = true;
-        } else if (currentProduct.stock_quantity <= 5) {
-            stockBadge.textContent = `Only ${currentProduct.stock_quantity} left in stock`;
-            stockBadge.className = 'stock-pill low-stock';
-        } else {
-            stockBadge.textContent = 'In stock & ready to ship';
-            stockBadge.className = 'stock-pill in-stock';
-        }
-
-        // Image
+        // Image or placeholder
         if (currentProduct.image_url) {
-            productImage.src = currentProduct.image_url;
-            productImage.alt = currentProduct.name;
+            productImage2.src = currentProduct.image_url;
+            productImage2.alt = currentProduct.name;
+            productImage2.style.display = 'block';
         } else {
-            mainImageWrap.innerHTML = iconFor(currentProduct);
+            mainImageWrap2.innerHTML = `
+                <div class="img-placeholder">
+                    ${iconFor(currentProduct)}
+                </div>`;
         }
+
+        // Stock state
+        let stockClass = 'in-stock', stockText = 'In stock &amp; ready to ship';
+        if (currentProduct.stock_quantity <= 0) {
+            stockClass = 'sold-out'; stockText = 'Sold out';
+        } else if (currentProduct.stock_quantity <= 5) {
+            stockClass = 'low-stock'; stockText = `Only ${currentProduct.stock_quantity} left`;
+        }
+
+        const disabledAttr = currentProduct.stock_quantity <= 0 ? 'disabled' : '';
+
+        // Build details panel
+        productDetails.innerHTML = `
+            <div class="product-badge-row">
+                <span class="cat-pill">${esc(currentProduct.category || 'Gear')}</span>
+                <span class="stock-pill ${stockClass}">${stockText}</span>
+            </div>
+            <h1 class="product-title">${esc(currentProduct.name)}</h1>
+            <div class="rating-row">
+                <div class="stars">★★★★★</div>
+                <span class="rating-score">4.9</span>
+                <span class="rating-count">(124 verified reviews)</span>
+            </div>
+            <div class="price-row">
+                <span class="current-price">${money(currentProduct.price)}</span>
+                <span class="original-price">${money(Math.round(currentProduct.price * 1.15))}</span>
+                <span class="discount-badge">Save 15%</span>
+            </div>
+            <p class="product-description">${esc(currentProduct.description || 'Premium gear built for high performance and daily reliability.')}</p>
+            <div class="highlights-box">
+                <div class="hl-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span>Official PlugNPlay Grade-A Certified Hardware</span>
+                </div>
+                <div class="hl-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <span>Fast delivery across Bangladesh in 24–48 hours</span>
+                </div>
+                <div class="hl-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span>1 Year Full Replacement Warranty</span>
+                </div>
+            </div>
+            <div class="purchase-controls">
+                <div class="qty-stepper">
+                    <button id="qtyMinus" aria-label="Decrease quantity" ${disabledAttr}>−</button>
+                    <span id="qtyDisplay">1</span>
+                    <button id="qtyPlus" aria-label="Increase quantity" ${disabledAttr}>+</button>
+                </div>
+                <button class="btn btn-add-cart" id="addToCartBtn" ${disabledAttr}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    ${currentProduct.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+                <button class="btn-buy-now" id="buyNowBtn" ${disabledAttr}>Buy Now</button>
+            </div>`;
+
+        // Re-bind controls
+        const qMinus = document.getElementById('qtyMinus');
+        const qPlus  = document.getElementById('qtyPlus');
+        const qDisp  = document.getElementById('qtyDisplay');
+        const addBtn = document.getElementById('addToCartBtn');
+        const buyBtn = document.getElementById('buyNowBtn');
+
+        qMinus.addEventListener('click', () => {
+            currentQty = Math.max(1, currentQty - 1);
+            qDisp.textContent = currentQty;
+        });
+        qPlus.addEventListener('click', () => {
+            if (currentQty < currentProduct.stock_quantity) {
+                currentQty++;
+                qDisp.textContent = currentQty;
+            }
+        });
+        addBtn.addEventListener('click', async () => {
+            if (!getToken()) { showToast('Sign in to add items', 'error'); return; }
+            try {
+                addBtn.disabled = true;
+                addBtn.textContent = 'Adding…';
+                await apiRequest('/cart', 'POST', { productId: currentProduct.id, quantity: currentQty }, true);
+                showToast(`Added ${currentQty} item${currentQty > 1 ? 's' : ''} to cart`);
+                updateCartCount(true);
+                addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added!`;
+                setTimeout(() => {
+                    addBtn.disabled = false;
+                    addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Add to Cart`;
+                }, 2000);
+            } catch (err) { showToast(err.message, 'error'); addBtn.disabled = false; }
+        });
+        buyBtn.addEventListener('click', async () => {
+            if (!getToken()) { showToast('Sign in to proceed', 'error'); return; }
+            try {
+                await apiRequest('/cart', 'POST', { productId: currentProduct.id, quantity: currentQty }, true);
+                window.location.href = 'checkout.html';
+            } catch (err) { showToast(err.message, 'error'); }
+        });
 
         // Render Specs
         const specs = getSpecsForProduct(currentProduct);
@@ -163,9 +269,16 @@ const loadProductDetails = async () => {
         loadRelated();
     } catch (err) {
         document.getElementById('productPage').innerHTML = `
-            <div class="orders-empty" style="margin: 80px auto; max-width: 500px;">
-                <h2>Product Not Found</h2>
-                <p>The product you are looking for may have been removed or is temporarily unavailable.</p>
+            <div style="text-align:center; padding: 5rem 2rem;">
+                <div style="width:72px;height:72px;border-radius:50%;background:hsl(0 85% 60% / 0.1);border:1px solid hsl(0 85% 60% / 0.2);display:grid;place-items:center;color:hsl(0 85% 60%);margin:0 auto 1.5rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:32px;height:32px">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:.5rem">Product Not Found</h2>
+                <p style="color:var(--muted);font-size:.9rem;max-width:380px;margin:0 auto 1.5rem;line-height:1.6">
+                    The product you are looking for may have been removed or is temporarily unavailable.
+                </p>
                 <a href="index.html" class="btn">Return to Shop</a>
             </div>`;
     }
@@ -174,7 +287,10 @@ const loadProductDetails = async () => {
 const loadRelated = async () => {
     try {
         const all = await apiRequest('/products');
-        const related = all.filter((p) => p.id !== Number(productId)).slice(0, 3);
+        const related = all
+            .filter((p) => p.id !== Number(productId))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
         relatedGrid.innerHTML = related.map(renderCardHTML).join('');
     } catch (err) {
         console.error('Failed to load related gear', err);
@@ -196,45 +312,6 @@ window.addToCartDirect = async (id) => {
     }
 };
 
-qtyMinus.addEventListener('click', () => {
-    currentQty = Math.max(1, currentQty - 1);
-    qtyDisplay.textContent = currentQty;
-});
-
-qtyPlus.addEventListener('click', () => {
-    if (currentProduct && currentQty < currentProduct.stock_quantity) {
-        currentQty++;
-        qtyDisplay.textContent = currentQty;
-    }
-});
-
-addToCartBtn.addEventListener('click', async () => {
-    if (!getToken()) {
-        showToast('Sign in to add items to your cart', 'error');
-        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
-        return;
-    }
-    try {
-        await apiRequest('/cart', 'POST', { productId: currentProduct.id, quantity: currentQty }, true);
-        showToast(`Added ${currentQty} item${currentQty > 1 ? 's' : ''} to cart`);
-        updateCartCount(true);
-    } catch (err) {
-        showToast(err.message, 'error');
-    }
-});
-
-buyNowBtn.addEventListener('click', async () => {
-    if (!getToken()) {
-        showToast('Sign in to proceed to checkout', 'error');
-        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
-        return;
-    }
-    try {
-        await apiRequest('/cart', 'POST', { productId: currentProduct.id, quantity: currentQty }, true);
-        window.location.href = 'checkout.html';
-    } catch (err) {
-        showToast(err.message, 'error');
-    }
-});
-
+/* ---- Init ---- */
 loadProductDetails();
+
