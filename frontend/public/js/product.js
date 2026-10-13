@@ -132,7 +132,10 @@ const loadProductDetails = async () => {
         </div>`;
 
     try {
-        // Rebuild the layout (skeleton was replaced)
+        // ✅ Fetch product data first
+        currentProduct = await apiRequest(`/products/${productId}`);
+
+        // Then rebuild the layout (replacing skeleton)
         document.getElementById('productLayout').innerHTML = `
             <div class="product-gallery">
                 <div class="main-image-wrap" id="mainImageWrap">

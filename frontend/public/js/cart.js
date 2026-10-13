@@ -7,6 +7,8 @@ const subtotalEl    = document.getElementById('subtotal');
 const totalEl       = document.getElementById('totalAmount');
 const checkoutBtn   = document.getElementById('checkoutBtn');
 const itemCountEl   = document.getElementById('cartItemCount');
+const deliveryFeeEl = document.getElementById('cartDeliveryFee');
+const cartAreaRadios = document.querySelectorAll('input[name="cartDeliveryArea"]');
 
 let items = [];
 
@@ -15,6 +17,32 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
 const money = (n) => '৳' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+const getCartDeliveryFee = () => {
+    const sel = document.querySelector('input[name="cartDeliveryArea"]:checked');
+    return sel && sel.value === 'outside_dhaka' ? 120 : 60;
+};
+
+// Restore saved area preference
+const savedCartArea = localStorage.getItem('plugnplay_delivery_area');
+if (savedCartArea) {
+    const target = document.querySelector(`input[name="cartDeliveryArea"][value="${savedCartArea}"]`);
+    if (target) {
+        target.checked = true;
+        document.querySelectorAll('.cart-area-option').forEach(c => c.classList.remove('active'));
+        target.closest('.cart-area-option')?.classList.add('active');
+    }
+}
+
+// Listen to cart delivery area changes
+cartAreaRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.cart-area-option').forEach(c => c.classList.remove('active'));
+        radio.closest('.cart-area-option')?.classList.add('active');
+        localStorage.setItem('plugnplay_delivery_area', radio.value);
+        renderSummary();
+    });
+});
 
 const svgIcon = (inner) =>
     `<svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3"
@@ -32,28 +60,32 @@ const itemHTML = (item) => `
         <div class="cart-item-info">
             <h3><a href="product.html?id=${item.product_id}">${esc(item.name)}</a></h3>
             <p class="unit-price">${money(item.price)} each</p>
-            <button class="remove" data-action="remove" aria-label="Remove ${esc(item.name)} from cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-                    <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
-                </svg>
-                Remove
-            </button>
         </div>
         <div class="stepper">
-            <button data-action="dec" aria-label="Decrease quantity">−</button>
+            <button data-action="dec" aria-label="Decrease quantity" title="${item.quantity === 1 ? 'Remove from cart' : 'Decrease quantity'}">
+                ${item.quantity === 1 ? '🗑' : '−'}
+            </button>
             <span>${item.quantity}</span>
-            <button data-action="inc" aria-label="Increase quantity">+</button>
+            <button data-action="inc" aria-label="Increase quantity" title="Increase quantity">+</button>
         </div>
         <div class="line-total">${money(item.price * item.quantity)}</div>
+        <button class="cart-remove-btn" data-action="remove" aria-label="Remove ${esc(item.name)} from cart" title="Remove item from cart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6M9 6V4h6v2"/>
+            </svg>
+            <span>Remove</span>
+        </button>
     </div>`;
 
 /* ---- Update summary panel ---- */
 const renderSummary = () => {
     const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
+    const fee = items.length > 0 ? getCartDeliveryFee() : 0;
     subtotalEl.textContent = money(subtotal);
-    totalEl.textContent    = money(subtotal);
+    if (deliveryFeeEl) deliveryFeeEl.textContent = money(fee);
+    totalEl.textContent    = money(subtotal + fee);
     checkoutBtn.toggleAttribute('disabled', items.length === 0);
 
     // Item count badge
@@ -129,13 +161,12 @@ listEl.addEventListener('click', async (e) => {
     if (!item) return;
 
     try {
-        if (action === 'remove') {
+        if (action === 'remove' || (action === 'dec' && item.quantity <= 1)) {
             await apiRequest(`/cart/${id}`, 'DELETE', null, true);
             items = items.filter((i) => i.id !== id);
             showToast('Removed from cart');
         } else {
             const newQty = action === 'inc' ? item.quantity + 1 : item.quantity - 1;
-            if (newQty < 1) return;
             await apiRequest(`/cart/${id}`, 'PUT', { quantity: newQty }, true);
             item.quantity = newQty;
         }

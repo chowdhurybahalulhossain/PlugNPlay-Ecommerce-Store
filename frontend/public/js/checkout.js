@@ -8,9 +8,14 @@ const payBtn          = document.getElementById('payBtn');
 const payBtnText      = document.getElementById('payBtnText');
 const messageBox      = document.getElementById('checkoutMessage');
 const summaryItems    = document.getElementById('summaryItems');
+const summarySubtotal = document.getElementById('summarySubtotal');
+const summaryDelivery = document.getElementById('summaryDelivery');
 const summaryTotal    = document.getElementById('summaryTotal');
 const cardPanel       = document.getElementById('cardDetailsPanel');
 const paymentRadios   = document.querySelectorAll('input[name="paymentMethod"]');
+const areaRadios      = document.querySelectorAll('input[name="deliveryArea"]');
+
+let cachedCartSubtotal = 0;
 
 /* ---- Helpers ---- */
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => (
@@ -26,6 +31,22 @@ const showMessage = (text, type) => {
 const getSelectedPayment = () => {
     const selected = document.querySelector('input[name="paymentMethod"]:checked');
     return selected ? selected.value : 'cod';
+};
+
+const getSelectedArea = () => {
+    const selected = document.querySelector('input[name="deliveryArea"]:checked');
+    return selected ? selected.value : 'inside_dhaka';
+};
+
+const getDeliveryFee = () => {
+    return getSelectedArea() === 'outside_dhaka' ? 120 : 60;
+};
+
+const updateSummaryTotals = () => {
+    const fee = getDeliveryFee();
+    if (summarySubtotal) summarySubtotal.textContent = money(cachedCartSubtotal);
+    if (summaryDelivery) summaryDelivery.textContent = money(fee);
+    if (summaryTotal) summaryTotal.textContent = money(cachedCartSubtotal + fee);
 };
 
 /* ---- Dynamic UI based on selected payment method ---- */
@@ -46,6 +67,27 @@ paymentRadios.forEach(radio => {
     radio.addEventListener('change', updatePaymentUI);
 });
 
+// Restore saved delivery area from localStorage if exists
+const savedArea = localStorage.getItem('plugnplay_delivery_area');
+if (savedArea) {
+    const targetRadio = document.querySelector(`input[name="deliveryArea"][value="${savedArea}"]`);
+    if (targetRadio) {
+        targetRadio.checked = true;
+        document.querySelectorAll('.area-card').forEach(c => c.classList.remove('active'));
+        targetRadio.closest('.area-card')?.classList.add('active');
+    }
+}
+
+// Listen for delivery zone changes
+areaRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.area-card').forEach(c => c.classList.remove('active'));
+        radio.closest('.area-card')?.classList.add('active');
+        localStorage.setItem('plugnplay_delivery_area', radio.value);
+        updateSummaryTotals();
+    });
+});
+
 // Set initial UI state
 updatePaymentUI();
 
@@ -61,7 +103,8 @@ const loadSummary = async () => {
         if (!items.length) {
             summaryItems.innerHTML = '<p class="muted-text">Your cart is empty.</p>';
             payBtn.disabled = true;
-            summaryTotal.textContent = money(0);
+            cachedCartSubtotal = 0;
+            updateSummaryTotals();
             return;
         }
         summaryItems.innerHTML = items.map((item) => `
@@ -69,8 +112,8 @@ const loadSummary = async () => {
                 <span>${esc(item.name)} × ${item.quantity}</span>
                 <span>${money(item.price * item.quantity)}</span>
             </div>`).join('');
-        const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        summaryTotal.textContent = money(total);
+        cachedCartSubtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        updateSummaryTotals();
     } catch (err) {
         summaryItems.innerHTML = `<p class="muted-text">${esc(err.message)}</p>`;
     }
@@ -88,6 +131,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     const method = getSelectedPayment();
+    const area = getSelectedArea();
     payBtn.disabled = true;
 
     if (method === 'cod') {
@@ -100,11 +144,9 @@ form.addEventListener('submit', async (e) => {
         const payload = {
             shippingAddress: address,
             paymentType: method,
+            deliveryArea: area
         };
 
-        // For card payments, we use the Stripe test payment method token.
-        // In a real implementation, you'd use Stripe.js Elements to collect
-        // card details and create a PaymentMethod on the client before submitting.
         if (method === 'card') {
             payload.paymentMethodId = 'pm_card_visa'; // Stripe test token
         }

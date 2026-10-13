@@ -41,13 +41,22 @@
             <aside class="cart-summary">
                 <h2>Order Summary</h2>
                 <div class="row"><span>Subtotal</span><span id="subtotal">৳0</span></div>
-                <div class="row muted"><span>Shipping</span><span>Calculated at checkout</span></div>
-                <div class="cart-free-ship">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-                    </svg>
-                    Free delivery on all orders
+                <div class="cart-delivery-selector">
+                    <div class="cart-delivery-title">Delivery Area</div>
+                    <div class="cart-delivery-radios">
+                        <label class="cart-area-option active" id="cart-area-inside-label">
+                            <input type="radio" name="cartDeliveryArea" value="inside_dhaka" checked>
+                            <span>Inside Dhaka</span>
+                            <strong>৳60</strong>
+                        </label>
+                        <label class="cart-area-option" id="cart-area-outside-label">
+                            <input type="radio" name="cartDeliveryArea" value="outside_dhaka">
+                            <span>Outside Dhaka</span>
+                            <strong>৳120</strong>
+                        </label>
+                    </div>
                 </div>
+                <div class="row muted"><span>Delivery Fee</span><span id="cartDeliveryFee">৳60</span></div>
                 <div class="row total"><span>Total</span><span id="totalAmount">৳0</span></div>
                 <a href="checkout.html" class="btn" id="checkoutBtn">
                     Proceed to Checkout

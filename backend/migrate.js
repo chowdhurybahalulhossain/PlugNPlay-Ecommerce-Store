@@ -23,8 +23,22 @@ async function migrate() {
                 ) THEN
                     ALTER TABLE orders ADD COLUMN payment_method VARCHAR(50) DEFAULT 'card';
                     RAISE NOTICE 'Column payment_method added.';
-                ELSE
-                    RAISE NOTICE 'Column payment_method already exists. Skipping.';
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'orders' AND column_name = 'delivery_fee'
+                ) THEN
+                    ALTER TABLE orders ADD COLUMN delivery_fee NUMERIC DEFAULT 60;
+                    RAISE NOTICE 'Column delivery_fee added.';
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'orders' AND column_name = 'delivery_area'
+                ) THEN
+                    ALTER TABLE orders ADD COLUMN delivery_area VARCHAR(50) DEFAULT 'inside_dhaka';
+                    RAISE NOTICE 'Column delivery_area added.';
                 END IF;
             END $$;
         `);

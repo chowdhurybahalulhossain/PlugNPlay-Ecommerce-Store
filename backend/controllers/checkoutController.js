@@ -7,7 +7,8 @@ const checkout = async (req, res) => {
         const userId = req.user.id;
         // paymentType: 'card' | 'cod'
         // paymentMethodId: only required for 'card' payments
-        const { shippingAddress, paymentType, paymentMethodId } = req.body;
+        // deliveryArea: 'inside_dhaka' | 'outside_dhaka'
+        const { shippingAddress, paymentType, paymentMethodId, deliveryArea = 'inside_dhaka' } = req.body;
 
         if (!shippingAddress) {
             return res.status(400).json({ error: 'Shipping address is required.' });
@@ -18,6 +19,10 @@ const checkout = async (req, res) => {
         if (paymentType === 'card' && !paymentMethodId) {
             return res.status(400).json({ error: 'Card details are required for card payment.' });
         }
+
+        // Determine delivery fee: Inside Dhaka = 60, Outside Dhaka = 120
+        const selectedArea = deliveryArea === 'outside_dhaka' ? 'outside_dhaka' : 'inside_dhaka';
+        const deliveryFee = selectedArea === 'outside_dhaka' ? 120 : 60;
 
         // --- Fetch cart items with product details ---
         const cartResult = await pool.query(
@@ -42,8 +47,9 @@ const checkout = async (req, res) => {
             }
         }
 
-        // --- Calculate total amount ---
-        const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // --- Calculate subtotal and total amount including delivery ---
+        const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const totalAmount = subtotal + deliveryFee;
 
         // --- Payment Path ---
         let stripePaymentId = null;
@@ -67,7 +73,7 @@ const checkout = async (req, res) => {
         try {
             await client.query('BEGIN');
 
-            order = await createOrder(userId, totalAmount, shippingAddress, paymentType, stripePaymentId, client);
+            order = await createOrder(userId, totalAmount, shippingAddress, paymentType, stripePaymentId, deliveryFee, selectedArea, client);
 
             for (const item of cartItems) {
                 await addOrderItem(order.id, item.product_id, item.quantity, item.price, client);

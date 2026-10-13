@@ -39,15 +39,39 @@
         <div class="cart-layout">
             <form class="checkout-form" id="checkoutForm" novalidate>
 
-                <!-- STEP 1: Shipping -->
+                <!-- STEP 1: Shipping & Delivery -->
                 <section class="checkout-section">
                     <div class="section-heading">
                         <span class="step-badge">1</span>
-                        <h2>Shipping Address</h2>
+                        <h2>Shipping & Delivery Area</h2>
                     </div>
                     <label class="field-label" for="shippingAddress">Delivery address</label>
                     <textarea id="shippingAddress" class="field-input" rows="3"
                         placeholder="House no., Road, Area, City, ZIP" required></textarea>
+
+                    <label class="field-label" style="margin-top: 1.25rem;">Select Delivery Zone</label>
+                    <div class="delivery-area-options" id="deliveryAreaOptions" role="radiogroup" aria-label="Select delivery area">
+                        <label class="area-card active" id="label-area-inside" for="area-inside">
+                            <input type="radio" name="deliveryArea" id="area-inside" value="inside_dhaka" checked>
+                            <div class="area-card-inner">
+                                <div class="area-info">
+                                    <span class="area-name">Inside Dhaka</span>
+                                    <span class="area-sub">Standard delivery in 24–48 hours</span>
+                                </div>
+                                <span class="area-price">৳60</span>
+                            </div>
+                        </label>
+                        <label class="area-card" id="label-area-outside" for="area-outside">
+                            <input type="radio" name="deliveryArea" id="area-outside" value="outside_dhaka">
+                            <div class="area-card-inner">
+                                <div class="area-info">
+                                    <span class="area-name">Outside Dhaka</span>
+                                    <span class="area-sub">Standard delivery in 3–5 days</span>
+                                </div>
+                                <span class="area-price">৳120</span>
+                            </div>
+                        </label>
+                    </div>
                 </section>
 
                 <!-- STEP 2: Payment Method -->
@@ -186,6 +210,14 @@
                 <h2>Order Summary</h2>
                 <div id="summaryItems"></div>
                 <div class="summary-divider"></div>
+                <div class="summary-line" style="color:var(--muted)">
+                    <span>Subtotal</span>
+                    <span id="summarySubtotal">৳0</span>
+                </div>
+                <div class="summary-line" style="color:var(--muted); margin-bottom: 0.5rem;">
+                    <span>Delivery Fee</span>
+                    <span id="summaryDelivery">৳60</span>
+                </div>
                 <div class="row total"><span>Total</span><span id="summaryTotal">৳0</span></div>
                 <div class="secure-badge">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

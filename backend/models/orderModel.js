@@ -6,12 +6,12 @@ const pool = require('../config/db');
  * @param {string|null} stripePaymentId - Only set for card payments.
  * Status is 'paid' for card (Stripe confirmed), 'pending' for COD (not yet collected).
  */
-const createOrder = async (userId, totalAmount, shippingAddress, paymentMethod, stripePaymentId, client = pool) => {
+const createOrder = async (userId, totalAmount, shippingAddress, paymentMethod, stripePaymentId, deliveryFee = 60, deliveryArea = 'inside_dhaka', client = pool) => {
     const status = paymentMethod === 'cod' ? 'pending' : 'paid';
     const result = await client.query(
-        `INSERT INTO orders (user_id, total_amount, shipping_address, stripe_payment_id, payment_method, status)
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [userId, totalAmount, shippingAddress, stripePaymentId || null, paymentMethod, status]
+        `INSERT INTO orders (user_id, total_amount, shipping_address, stripe_payment_id, payment_method, status, delivery_fee, delivery_area)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [userId, totalAmount, shippingAddress, stripePaymentId || null, paymentMethod, status, deliveryFee, deliveryArea]
     );
     return result.rows[0];
 };

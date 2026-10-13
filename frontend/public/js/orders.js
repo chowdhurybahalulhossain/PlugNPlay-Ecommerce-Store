@@ -56,6 +56,9 @@ const orderHTML = (order) => {
             <div class="order-meta-info">
                 <span class="meta-label">Shipping Address</span>
                 <span class="order-address">${esc(order.shipping_address || 'No address specified')}</span>
+                ${order.delivery_area
+                    ? `<span class="order-payment-id" style="color:var(--text)">🚚 ${order.delivery_area === 'outside_dhaka' ? 'Outside Dhaka (৳120 delivery)' : 'Inside Dhaka (৳60 delivery)'}</span>`
+                    : ''}
                 ${order.stripe_payment_id
                     ? `<span class="order-payment-id">TXN: ${esc(order.stripe_payment_id)}</span>`
                     : ''}
@@ -63,6 +66,9 @@ const orderHTML = (order) => {
             <div class="order-total-block">
                 <span class="meta-label">Total</span>
                 <span class="order-total-amount">${money(order.total_amount)}</span>
+                ${order.delivery_fee
+                    ? `<span class="order-payment-id">Incl. ${money(order.delivery_fee)} delivery</span>`
+                    : ''}
             </div>
         </div>
 
