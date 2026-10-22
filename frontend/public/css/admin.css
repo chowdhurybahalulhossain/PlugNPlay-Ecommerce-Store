@@ -80,76 +80,112 @@
 }
 
 .metric-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
     border-radius: 1.15rem;
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem 1.4rem;
     display: flex;
-    align-items: center;
-    gap: 1.15rem;
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 145px;
+    position: relative;
+    overflow: hidden;
+    color: #ffffff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
 }
 
 .metric-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-    box-shadow: 0 10px 25px hsl(262 85% 58% / 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 35px rgba(0, 0, 0, 0.25);
 }
 
-.metric-icon {
-    width: 3.2rem;
-    height: 3.2rem;
-    border-radius: 0.9rem;
+/* Gradient Variants matching Reference Image */
+.metric-card--orders {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+}
+
+.metric-card--income {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.metric-card--expense {
+    background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+}
+
+.metric-card--profit {
+    background: linear-gradient(135deg, #ea580c 0%, #f59e0b 100%);
+}
+
+.metric-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+}
+
+.metric-icon-circle {
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    color: #ffffff;
 }
 
-.metric-icon svg {
-    width: 1.4rem;
-    height: 1.4rem;
-}
-
-.metric-icon--revenue {
-    background: hsl(142 71% 45% / 0.12);
-    color: hsl(142 71% 45%);
-}
-
-.metric-icon--orders {
-    background: hsl(217 91% 60% / 0.12);
-    color: hsl(217 91% 60%);
-}
-
-.metric-icon--products {
-    background: hsl(262 85% 58% / 0.12);
-    color: var(--accent);
-}
-
-.metric-icon--stock {
-    background: hsl(38 92% 50% / 0.12);
-    color: hsl(38 92% 50%);
-}
-
-.metric-data {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+.metric-icon-circle svg {
+    width: 1.35rem;
+    height: 1.35rem;
 }
 
 .metric-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.85);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+    display: block;
 }
 
 .metric-value {
     font-family: 'Unbounded', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--text);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+}
+
+.metric-card-bottom {
+    margin-top: 1rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.metric-sub {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.metric-sparkline {
+    width: 90px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.metric-sparkline svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
 }
 
 /* Tabs Navigation */
@@ -1304,5 +1340,333 @@
 .cat-rev {
     font-weight: 700;
     color: var(--accent);
+}
+
+/* ================================================================
+   FINANCIAL REPORTS & INTERACTIVE CHARTS (Matching Reference UI)
+   ================================================================ */
+.chart-panel-card {
+    margin-bottom: 2rem;
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+}
+
+.chart-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.chart-panel-title-wrap h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+}
+
+.chart-panel-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.chart-timeframe-controls {
+    display: flex;
+    align-items: center;
+    background: var(--surface-2, rgba(255, 255, 255, 0.05));
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    gap: 4px;
+}
+
+.btn-timeframe {
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-timeframe:hover {
+    color: var(--text);
+}
+
+.btn-timeframe.active {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 4px 12px hsl(262 85% 58% / 0.35);
+}
+
+/* Stat Strip above chart */
+.chart-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--surface-2, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+}
+
+.chart-stat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-left: 3px solid var(--border);
+    padding-left: 0.85rem;
+}
+
+.chart-stat-box.cs-highlight-sales {
+    border-left-color: #10b981;
+}
+
+.chart-stat-box.cs-highlight-cost {
+    border-left-color: #06b6d4;
+}
+
+.chart-stat-box.cs-highlight-profit {
+    border-left-color: #f59e0b;
+}
+
+.cs-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+}
+
+.cs-val {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.cs-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+/* Chart Canvas & Legend */
+.chart-container-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.legend-dot.dot-sales {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+}
+
+.legend-dot.dot-profit {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+}
+
+.legend-hint {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.interactive-chart-viewport {
+    width: 100%;
+    min-height: 280px;
+    position: relative;
+    background: var(--surface-2, rgba(255, 255, 255, 0.02));
+    border-radius: 0.85rem;
+    border: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.interactive-chart-svg {
+    width: 100%;
+    height: 280px;
+    display: block;
+    cursor: crosshair;
+}
+
+/* Tooltip floating card */
+.chart-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(18, 18, 28, 0.92);
+    border: 1px solid var(--accent);
+    color: #ffffff;
+    padding: 0.65rem 0.95rem;
+    border-radius: 0.75rem;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 20;
+    transform: translate(-50%, -115%);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    white-space: nowrap;
+}
+
+.chart-tooltip-date {
+    font-weight: 800;
+    font-size: 0.82rem;
+    color: #ffffff;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding-bottom: 0.25rem;
+}
+
+.chart-tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-bottom: 0.2rem;
+}
+
+.chart-tooltip-row strong {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.8rem;
+}
+
+/* ================================================================
+   ORDER ACTIVITY FEED (Matching Screenshot Bottom-Left)
+   ================================================================ */
+.order-activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 0.95rem;
+    padding: 0.85rem 1rem;
+    background: var(--surface-2, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.activity-item:hover {
+    transform: translateX(3px);
+    border-color: var(--accent);
+}
+
+.activity-icon-badge {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-icon-badge.paid {
+    background: hsl(142 71% 45% / 0.15);
+    color: hsl(142 71% 45%);
+}
+
+.activity-icon-badge.delivered {
+    background: hsl(217 91% 60% / 0.15);
+    color: hsl(217 91% 60%);
+}
+
+.activity-icon-badge.pending {
+    background: hsl(38 92% 50% / 0.15);
+    color: hsl(38 92% 50%);
+}
+
+.activity-icon-badge.shipped {
+    background: hsl(262 85% 58% / 0.15);
+    color: var(--accent);
+}
+
+.activity-icon-badge.cancelled {
+    background: hsl(0 84% 60% / 0.15);
+    color: hsl(0 84% 60%);
+}
+
+.activity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.activity-order-id {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+.activity-meta {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+}
+
+.activity-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.activity-amount {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.activity-time {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
 }
 

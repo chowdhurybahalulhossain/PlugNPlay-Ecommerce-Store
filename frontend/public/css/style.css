@@ -1583,6 +1583,294 @@ html[data-theme="light"] .icon-sun {
     color: #fff !important;
     box-shadow: 0 4px 15px hsl(262 85% 58% / 0.4);
     transform: translateY(-1px);
+/* ================================================================
+   CUSTOMER BEST SELLERS / TOP SOLD SHOWCASE SECTION
+   ================================================================ */
+.best-sellers-section {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 30px 40px 10px;
+}
+
+.best-sellers-inner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2.25rem 2rem;
+    position: relative;
+    overflow: hidden;
+    background-image: 
+        radial-gradient(ellipse 60% 40% at 10% 0%, hsl(38 92% 50% / 0.08), transparent),
+        radial-gradient(ellipse 50% 50% at 90% 100%, hsl(262 85% 58% / 0.07), transparent);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.best-sellers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+}
+
+.bs-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: hsl(38 92% 50% / 0.15);
+    border: 1px solid hsl(38 92% 50% / 0.35);
+    color: #f59e0b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.65rem;
+}
+
+.bs-flame-icon {
+    font-size: 0.9rem;
+    animation: flamePulse 1.8s infinite ease-in-out;
+}
+
+@keyframes flamePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2) rotate(-5deg); }
+}
+
+.bs-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.02em;
+}
+
+.bs-sub {
+    color: var(--muted);
+    font-size: 0.92rem;
+    max-width: 600px;
+}
+
+.bs-header-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    background: var(--surface-2, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.bs-live-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+    animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.best-sellers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Individual Best Seller Card */
+.bs-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+.bs-card:hover {
+    transform: translateY(-6px);
+    border-color: #f59e0b;
+    box-shadow: 0 16px 35px rgba(245, 158, 11, 0.12);
+}
+
+.bs-card-badges {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.bs-rank-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.bs-sold-pill {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+}
+
+.bs-art {
+    height: 190px;
+    border-radius: 1rem;
+    background: var(--surface-2, rgba(255, 255, 255, 0.03));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 1.15rem;
+    position: relative;
+}
+
+.bs-art img {
+    max-width: 82%;
+    max-height: 82%;
+    object-fit: contain;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bs-card:hover .bs-art img {
+    transform: scale(1.08);
+}
+
+.bs-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.bs-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    margin-bottom: 0.4rem;
+}
+
+.bs-category {
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.bs-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.bs-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    line-height: 1.35;
+    flex: 1;
+}
+
+.bs-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: auto;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--border);
+}
+
+.bs-price {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.btn-bs-add {
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-bs-add:hover {
+    box-shadow: 0 4px 15px hsl(262 85% 58% / 0.45);
+    transform: translateY(-2px);
+}
+
+/* Catalog Card Best Seller Badge */
+.tag-bestseller {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.4);
+    z-index: 4;
+}
+
+@media (max-width: 768px) {
+    .best-sellers-section {
+        padding: 20px 20px 0;
+    }
+    .best-sellers-inner {
+        padding: 1.5rem 1.25rem;
+    }
+    .best-sellers-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

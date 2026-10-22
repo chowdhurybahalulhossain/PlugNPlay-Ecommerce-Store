@@ -11,7 +11,10 @@ const {
 } = require('../controllers/productController');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
+const { getPublicBestSellers } = require('../controllers/orderController');
+
 // Public routes
+router.get('/best-sellers', getPublicBestSellers);
 router.get('/search', searchProductsHandler);
 router.get('/', listProducts);
 router.get('/:id', getProduct);

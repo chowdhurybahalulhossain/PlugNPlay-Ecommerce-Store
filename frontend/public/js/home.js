@@ -43,6 +43,9 @@ let selected = null;
 let qty = 1;
 let ratingsMap = {};
 let wishlistIds = new Set();
+let bestSellersList = [];
+let bestSellerIds = new Set();
+const bestSellersGridEl = document.getElementById('bestSellersGrid');
 
 // Escaper & Money Formatter
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
@@ -112,12 +115,15 @@ const imageOrIcon = (p) => {
 const cardHTML = (p) => {
     const inWishlist = wishlistIds.has(p.id);
     const r = ratingsMap[p.id];
+    const isBestSeller = bestSellerIds.has(p.id);
+    const bestSellerTag = isBestSeller ? `<span class="tag-bestseller">🔥 Best Seller</span>` : '';
     const ratingHtml = r && r.total_reviews > 0
         ? `<div class="card-stars"><span class="star-icon">★</span> <strong>${r.avg_rating}</strong> <span class="card-rev-count">(${r.total_reviews})</span></div>`
         : `<div class="card-stars new"><span class="star-icon">★</span> <strong>5.0</strong> <span class="card-rev-count">(Verified)</span></div>`;
 
     return `
     <article class="card" data-id="${p.id}" tabindex="0" style="cursor: pointer;">
+        ${bestSellerTag}
         ${stockTag(p)}
         <button type="button" class="btn-card-heart ${inWishlist ? 'active' : ''}" data-wishlist-id="${p.id}" title="${inWishlist ? 'Remove from wishlist' : 'Save to wishlist'}" aria-label="Save to wishlist">
             <svg viewBox="0 0 24 24" fill="${inWishlist ? '#f43f5e' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -253,22 +259,96 @@ const resetAllFilters = () => {
     renderProducts();
 };
 
+// Render Customer Best Sellers Showcase
+const renderBestSellersShowcase = (items = []) => {
+    if (!bestSellersGridEl) return;
+    if (!items.length) {
+        bestSellersGridEl.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 2rem;">No best sellers available yet.</div>';
+        return;
+    }
+
+    const rankLabels = ['#1 BEST SELLER', '#2 TOP RATED', '#3 POPULAR GEAR', '#4 TRENDING', '#5 HOT PICK', '#6 FEATURED'];
+
+    bestSellersGridEl.innerHTML = items.slice(0, 3).map((p, idx) => {
+        const soldText = p.total_sold > 0 ? `⚡ ${p.total_sold} Sold` : `⚡ Top Rated`;
+        const rating = Number(p.avg_rating || 5.0).toFixed(1);
+        const reviewText = p.review_count > 0 ? `(${p.review_count} reviews)` : `(Verified)`;
+        const imgSrc = p.image_url 
+            ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy">` 
+            : imageOrIcon(p);
+
+        return `
+            <div class="bs-card" data-id="${p.id}" tabindex="0">
+                <div class="bs-card-badges">
+                    <span class="bs-rank-badge">${rankLabels[idx] || '#TOP GEAR'}</span>
+                    <span class="bs-sold-pill">${soldText}</span>
+                </div>
+                <div class="bs-art">
+                    ${imgSrc}
+                </div>
+                <div class="bs-card-body">
+                    <div class="bs-meta">
+                        <span class="bs-category">${esc(p.category || 'Gear')}</span>
+                        <span class="bs-rating">★ ${rating} <small style="color:var(--muted); font-weight:500;">${reviewText}</small></span>
+                    </div>
+                    <h3 class="bs-card-title">${esc(p.name)}</h3>
+                    <div class="bs-card-foot">
+                        <span class="bs-price">${money(p.price)}</span>
+                        <button type="button" class="btn-bs-add" data-add="${p.id}" ${p.stock_quantity <= 0 ? 'disabled' : ''}>
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+// Event listener for Best Sellers Grid
+bestSellersGridEl?.addEventListener('click', (e) => {
+    const addBtn = e.target.closest('[data-add]');
+    if (addBtn) {
+        e.stopPropagation();
+        return addToCart(Number(addBtn.dataset.add));
+    }
+    const card = e.target.closest('.bs-card');
+    if (card && card.dataset.id) {
+        window.location.href = `product.html?id=${card.dataset.id}`;
+    }
+});
+
+bestSellersGridEl?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const card = e.target.closest('.bs-card');
+        if (card && card.dataset.id) {
+            window.location.href = `product.html?id=${card.dataset.id}`;
+        }
+    }
+});
+
 // Load Initial Catalog
 const loadProducts = async () => {
     gridEl.innerHTML = Array(6).fill('<div class="skeleton"></div>').join('');
     try {
         const promises = [
             apiRequest('/products'),
-            apiRequest('/reviews/summary').catch(() => ({}))
+            apiRequest('/reviews/summary').catch(() => ({})),
+            apiRequest('/products/best-sellers?limit=6').catch(() => [])
         ];
         if (getToken()) {
             promises.push(apiRequest('/wishlist/ids', 'GET', null, true).catch(() => []));
         }
 
-        const [prods, ratings, wIds = []] = await Promise.all(promises);
+        const [prods, ratings, bestSellers = [], wIds = []] = await Promise.all(promises);
         state.products = prods || [];
         ratingsMap = ratings || {};
+        bestSellersList = bestSellers || [];
+        bestSellerIds = new Set(bestSellersList.map(p => p.id));
         wishlistIds = new Set(Array.isArray(wIds) ? wIds : []);
+
+        // Render Best Sellers Showcase
+        renderBestSellersShowcase(bestSellersList);
 
         // Support direct ?search=... URL parameters from global search or links
         const urlParams = new URLSearchParams(window.location.search);

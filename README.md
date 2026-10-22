@@ -1,4 +1,4 @@
-# ? PlugNPlay — Next-Gen Electronics & Peripherals E-Commerce Platform
+# ? PlugNPlay ï¿½ Next-Gen Electronics & Peripherals E-Commerce Platform
 
 [![Node.js](https://img.shields.io/badge/Node.js-20.x+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
@@ -17,7 +17,7 @@
 * **Dynamic Aesthetics:** Dark-mode cyber-inspired glassmorphism with glowing neon accents, 3D interactive card tilt on pointer hover, and ambient radial spotlights.
 * **Advanced Multi-Criteria Filtering:**
   * Category chips with real-time product count badges.
-  * Price-range quick pills (Under ?3k, ?3k–?6k, Above ?6k).
+  * Price-range quick pills (Under ?3k, ?3kï¿½?6k, Above ?6k).
   * "In Stock Only" toggle with pulsating status indicator.
   * Multi-criteria sorting (Newest drops, Price Low-to-High, Price High-to-Low, A-to-Z).
 
@@ -41,7 +41,7 @@
 * **Automated Delivery Fee Calculation:**
   * Inside Dhaka Express Delivery: **?60**
   * Outside Dhaka Courier Delivery: **?120**
-* **Delivery Zone Selector:** Interactive radio cards in both Cart and Checkout pages — persisted via `localStorage`.
+* **Delivery Zone Selector:** Interactive radio cards in both Cart and Checkout pages ï¿½ persisted via `localStorage`.
 * **Flexible Payment Options:** Cash on Delivery (COD) and Online Card (Stripe) payments.
 * **Accurate Shipping Total:** `total_amount` stored in DB = `items subtotal + delivery_fee`. Order cards always display the shipping breakdown.
 * **Cart Badge Animations:** Interactive quantity stepper with visual cart badge bump animations.
@@ -59,20 +59,20 @@
 
 The Admin Dashboard is a fully-featured, single-page control panel accessible only to users with `role = 'admin'`. It is split into **3 tabs**:
 
-#### ?? Tab 1 — Products Catalog Management
+#### ?? Tab 1 ï¿½ Products Catalog Management
 
 | Feature | Details |
 |---|---|
 | **Product Table** | Full catalog with thumbnail, name, category tag, price, stock badge |
 | **Add Product** | Modal form: name, category, price (?), stock quantity, image URL, description |
-| **Edit Product** | Pre-populated modal — same form, PUT to `/api/products/:id` |
+| **Edit Product** | Pre-populated modal ï¿½ same form, PUT to `/api/products/:id` |
 | **Delete Product** | Confirmation modal before permanent removal |
 | **Category Filter** | Dropdown auto-populated from live product categories |
 | **Search Filter** | Real-time client-side search across name and category |
 | **Stock Badge Colors** | ?? In Stock / ?? Low Stock (= 5 units) / ?? Out of Stock |
 | **Inline +10 Restock** | One-click `+10` button directly in the table for low-stock items |
 
-#### ?? Tab 2 — Customer Orders Management
+#### ?? Tab 2 ï¿½ Customer Orders Management
 
 | Feature | Details |
 |---|---|
@@ -84,17 +84,17 @@ The Admin Dashboard is a fully-featured, single-page control panel accessible on
 | **Status Filter** | Dropdown to show only specific status states |
 | **Payment Badge** | ?? Cash on Delivery vs ?? Paid by Card (Stripe) |
 
-#### ?? Tab 3 — Analytics & Insights
+#### ?? Tab 3 ï¿½ Analytics & Insights
 
 | Metric | Description |
 |---|---|
 | **Average Order Value (AOV)** | Mean spend per completed checkout |
-| **Fulfillment Rate** | `delivered / total_valid_orders × 100%` |
+| **Fulfillment Rate** | `delivered / total_valid_orders ï¿½ 100%` |
 | **COD Order Volume** | Total revenue + count from Cash on Delivery orders |
 | **Card / Stripe Volume** | Total revenue + count from prepaid card orders |
 | **Delivery Area Breakdown** | Progress bars: Inside Dhaka vs Outside Dhaka split |
 | **Payment Methods Split** | Progress bars: COD % vs Card % |
-| **Top Selling Products** | Leaderboard by units sold — ranked #1–#5 with revenue |
+| **Top Selling Products** | Leaderboard by units sold ï¿½ ranked #1ï¿½#5 with revenue |
 | **Category Performance** | Revenue + units sold per category with animated bar |
 
 #### ? Quick Restock Hub (Modal)
@@ -103,7 +103,7 @@ The Admin Dashboard is a fully-featured, single-page control panel accessible on
 * Live-updates the table and metrics without page refresh.
 
 #### ?? Admin Access Control
-* JWT token + `role === 'admin'` check runs client-side on page load — unauthorized users are immediately redirected to `/login.html`.
+* JWT token + `role === 'admin'` check runs client-side on page load ï¿½ unauthorized users are immediately redirected to `/login.html`.
 * All admin API endpoints (`/orders/admin/*`, `POST/PUT/DELETE /products`) require `verifyToken + isAdmin` middleware on the backend.
 
 ---
@@ -113,60 +113,60 @@ The Admin Dashboard is a fully-featured, single-page control panel accessible on
 ```
 ecommerce-store/
 +-- backend/
-¦   +-- config/
-¦   ¦   +-- db.js                 # PostgreSQL connection pool with error handling
-¦   ¦   +-- stripe.js             # Stripe SDK configuration
-¦   +-- controllers/
-¦   ¦   +-- authController.js     # User registration, JWT login, profile
-¦   ¦   +-- cartController.js     # User cart management
-¦   ¦   +-- checkoutController.js # Checkout, delivery fee calculation, Stripe
-¦   ¦   +-- orderController.js    # Order listing, details, admin status updates, analytics
-¦   ¦   +-- productController.js  # Product catalog, stock updates, fast search
-¦   ¦   +-- reviewController.js   # Rating summaries, reviews feed, verified buyer check
-¦   ¦   +-- wishlistController.js # Wishlist toggling, listing, item removals
-¦   +-- middleware/
-¦   ¦   +-- authMiddleware.js     # verifyToken, isAdmin, optionalAuth
-¦   +-- models/
-¦   ¦   +-- orderModel.js         # Orders & order_items queries
-¦   ¦   +-- productModel.js       # Products queries & ILIKE search engine
-¦   ¦   +-- reviewModel.js        # Reviews & verified buyer queries
-¦   ¦   +-- wishlistModel.js      # Wishlist CRUD queries
-¦   +-- routes/
-¦   ¦   +-- authRoutes.js         # /api/auth/*
-¦   ¦   +-- cartRoutes.js         # /api/cart/*
-¦   ¦   +-- checkoutRoutes.js     # /api/checkout
-¦   ¦   +-- orderRoutes.js        # /api/orders/* (user + admin)
-¦   ¦   +-- productRoutes.js      # /api/products/*
-¦   ¦   +-- reviewRoutes.js       # /api/reviews/*
-¦   ¦   +-- userRoutes.js         # /api/user/* (profile, addresses)
-¦   ¦   +-- wishlistRoutes.js     # /api/wishlist/*
-¦   +-- migrate.js                # Database schema migrations & demo seeds
-¦   +-- server.js                 # Express application entrypoint
-¦
+ï¿½   +-- config/
+ï¿½   ï¿½   +-- db.js                 # PostgreSQL connection pool with error handling
+ï¿½   ï¿½   +-- stripe.js             # Stripe SDK configuration
+ï¿½   +-- controllers/
+ï¿½   ï¿½   +-- authController.js     # User registration, JWT login, profile
+ï¿½   ï¿½   +-- cartController.js     # User cart management
+ï¿½   ï¿½   +-- checkoutController.js # Checkout, delivery fee calculation, Stripe
+ï¿½   ï¿½   +-- orderController.js    # Order listing, details, admin status updates, analytics
+ï¿½   ï¿½   +-- productController.js  # Product catalog, stock updates, fast search
+ï¿½   ï¿½   +-- reviewController.js   # Rating summaries, reviews feed, verified buyer check
+ï¿½   ï¿½   +-- wishlistController.js # Wishlist toggling, listing, item removals
+ï¿½   +-- middleware/
+ï¿½   ï¿½   +-- authMiddleware.js     # verifyToken, isAdmin, optionalAuth
+ï¿½   +-- models/
+ï¿½   ï¿½   +-- orderModel.js         # Orders & order_items queries
+ï¿½   ï¿½   +-- productModel.js       # Products queries & ILIKE search engine
+ï¿½   ï¿½   +-- reviewModel.js        # Reviews & verified buyer queries
+ï¿½   ï¿½   +-- wishlistModel.js      # Wishlist CRUD queries
+ï¿½   +-- routes/
+ï¿½   ï¿½   +-- authRoutes.js         # /api/auth/*
+ï¿½   ï¿½   +-- cartRoutes.js         # /api/cart/*
+ï¿½   ï¿½   +-- checkoutRoutes.js     # /api/checkout
+ï¿½   ï¿½   +-- orderRoutes.js        # /api/orders/* (user + admin)
+ï¿½   ï¿½   +-- productRoutes.js      # /api/products/*
+ï¿½   ï¿½   +-- reviewRoutes.js       # /api/reviews/*
+ï¿½   ï¿½   +-- userRoutes.js         # /api/user/* (profile, addresses)
+ï¿½   ï¿½   +-- wishlistRoutes.js     # /api/wishlist/*
+ï¿½   +-- migrate.js                # Database schema migrations & demo seeds
+ï¿½   +-- server.js                 # Express application entrypoint
+ï¿½
 +-- frontend/public/
     +-- css/
-    ¦   +-- admin.css             # Admin dashboard — tables, modals, metrics cards
-    ¦   +-- auth.css              # Login & registration styling
-    ¦   +-- cart.css              # Cart drawer & items layout
-    ¦   +-- checkout.css          # Delivery area cards & payment selection
-    ¦   +-- orders.css            # Order cards & printable invoice @media print
-    ¦   +-- product.css           # Hardware detail view & reviews hub
-    ¦   +-- profile.css           # Account information & shipping address book
-    ¦   +-- search.css            # Command palette & autocomplete popover
-    ¦   +-- style.css             # Core design tokens, hero, grid, nav
-    ¦   +-- wishlist.css          # Saved hardware grid styling
+    ï¿½   +-- admin.css             # Admin dashboard ï¿½ tables, modals, metrics cards
+    ï¿½   +-- auth.css              # Login & registration styling
+    ï¿½   +-- cart.css              # Cart drawer & items layout
+    ï¿½   +-- checkout.css          # Delivery area cards & payment selection
+    ï¿½   +-- orders.css            # Order cards & printable invoice @media print
+    ï¿½   +-- product.css           # Hardware detail view & reviews hub
+    ï¿½   +-- profile.css           # Account information & shipping address book
+    ï¿½   +-- search.css            # Command palette & autocomplete popover
+    ï¿½   +-- style.css             # Core design tokens, hero, grid, nav
+    ï¿½   +-- wishlist.css          # Saved hardware grid styling
     +-- js/
-    ¦   +-- admin.js              # Admin CRUD, order management, analytics rendering
-    ¦   +-- api.js                # apiRequest() helper with JWT token handling
-    ¦   +-- auth.js               # Login & sign-up form logic
-    ¦   +-- cart.js               # Cart page stepper, delivery fee, checkout link
-    ¦   +-- checkout.js           # Fee calculation, summary sidebar, form submission
-    ¦   +-- home.js               # Storefront, autocomplete popover, 3D tilt
-    ¦   +-- orders.js             # Order history, invoice print trigger, shipping total
-    ¦   +-- product.js            # Details view, review form, star picker
-    ¦   +-- profile.js            # Address saving & account stats
-    ¦   +-- ui.js                 # Global navigation, Command Palette (Ctrl+K), theme
-    ¦   +-- wishlist.js           # Wishlist page & move-to-cart actions
+    ï¿½   +-- admin.js              # Admin CRUD, order management, analytics rendering
+    ï¿½   +-- api.js                # apiRequest() helper with JWT token handling
+    ï¿½   +-- auth.js               # Login & sign-up form logic
+    ï¿½   +-- cart.js               # Cart page stepper, delivery fee, checkout link
+    ï¿½   +-- checkout.js           # Fee calculation, summary sidebar, form submission
+    ï¿½   +-- home.js               # Storefront, autocomplete popover, 3D tilt
+    ï¿½   +-- orders.js             # Order history, invoice print trigger, shipping total
+    ï¿½   +-- product.js            # Details view, review form, star picker
+    ï¿½   +-- profile.js            # Address saving & account stats
+    ï¿½   +-- ui.js                 # Global navigation, Command Palette (Ctrl+K), theme
+    ï¿½   +-- wishlist.js           # Wishlist page & move-to-cart actions
     +-- images/                   # High-res hardware photos & graphics
     +-- admin.html                # Admin Dashboard portal (Products + Orders + Analytics)
     +-- cart.html                 # Shopping Cart page
@@ -369,7 +369,7 @@ Then navigate to **`http://localhost:5000/admin.html`**.
 | `/api/cart` | `POST` | User | Add item to cart |
 | `/api/cart/:id` | `PUT` | User | Update item quantity |
 | `/api/cart/:id` | `DELETE` | User | Remove item from cart |
-| `/api/checkout` | `POST` | User | Process order — calculates BD delivery fee, runs Stripe if card |
+| `/api/checkout` | `POST` | User | Process order ï¿½ calculates BD delivery fee, runs Stripe if card |
 
 ### ?? Orders
 | Endpoint | Method | Auth | Description |
@@ -377,7 +377,8 @@ Then navigate to **`http://localhost:5000/admin.html`**.
 | `/api/orders` | `GET` | User | List customer's own order history |
 | `/api/orders/:id` | `GET` | User | Order + items detail (for invoice generation) |
 | `/api/orders/admin/all` | `GET` | Admin | All customer orders with user info |
-| `/api/orders/admin/analytics` | `GET` | Admin | Revenue, AOV, fulfillment rate, top products |
+| `/api/orders/admin/analytics` | `GET` | Admin | Revenue, profit, expense, inventory valuation, recent activity |
+| `/api/orders/admin/timeseries` | `GET` | Admin | Daily, Monthly, Yearly revenue & profit trend datasets |
 | `/api/orders/admin/:id/status` | `PUT` | Admin | Update order status lifecycle |
 
 ### ?? User Profile

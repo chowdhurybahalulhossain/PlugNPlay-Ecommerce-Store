@@ -50,45 +50,102 @@
             </div>
         </div>
 
-        <!-- Metrics Overview Cards -->
+        <!-- Metrics Overview Cards (Vibrant Dashboard Gradients) -->
         <section class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-icon metric-icon--revenue">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <!-- Card 1: Orders -->
+            <div class="metric-card metric-card--orders">
+                <div class="metric-card-top">
+                    <div>
+                        <span class="metric-label">TOTAL ORDERS</span>
+                        <strong class="metric-value" id="metricOrders">0</strong>
+                    </div>
+                    <div class="metric-icon-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    </div>
                 </div>
-                <div class="metric-data">
-                    <span class="metric-label">Total Revenue</span>
-                    <strong class="metric-value" id="metricRevenue">৳0</strong>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-icon metric-icon--orders">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <div class="metric-data">
-                    <span class="metric-label">Total Orders</span>
-                    <strong class="metric-value" id="metricOrders">0</strong>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-icon metric-icon--products">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                </div>
-                <div class="metric-data">
-                    <span class="metric-label">Live Products</span>
-                    <strong class="metric-value" id="metricProducts">0</strong>
+                <div class="metric-card-bottom">
+                    <span class="metric-sub" id="metricOrdersSub">Valid customer checkouts</span>
+                    <div class="metric-sparkline" aria-hidden="true">
+                        <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <path d="M0,18 Q20,6 40,14 T80,8 T100,16 L100,24 L0,24 Z" fill="rgba(255,255,255,0.2)"/>
+                            <path d="M0,18 Q20,6 40,14 T80,8 T100,16" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
 
-            <div class="metric-card">
-                <div class="metric-icon metric-icon--stock">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <!-- Card 2: Total Sales / Income -->
+            <div class="metric-card metric-card--income">
+                <div class="metric-card-top">
+                    <div>
+                        <span class="metric-label">TOTAL SALES (বিক্রয়)</span>
+                        <strong class="metric-value" id="metricRevenue">৳0</strong>
+                    </div>
+                    <div class="metric-icon-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
                 </div>
-                <div class="metric-data">
-                    <span class="metric-label">Low Stock Alerts</span>
-                    <strong class="metric-value" id="metricLowStock">0</strong>
+                <div class="metric-card-bottom">
+                    <span class="metric-sub" id="metricIncomeSub">Gross revenue collected</span>
+                    <div class="metric-sparkline" aria-hidden="true">
+                        <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <rect x="5" y="14" width="8" height="10" rx="1" fill="rgba(255,255,255,0.4)"/>
+                            <rect x="20" y="8" width="8" height="16" rx="1" fill="rgba(255,255,255,0.7)"/>
+                            <rect x="35" y="12" width="8" height="12" rx="1" fill="rgba(255,255,255,0.5)"/>
+                            <rect x="50" y="4" width="8" height="20" rx="1" fill="rgba(255,255,255,0.85)"/>
+                            <rect x="65" y="10" width="8" height="14" rx="1" fill="rgba(255,255,255,0.6)"/>
+                            <rect x="80" y="2" width="8" height="22" rx="1" fill="rgba(255,255,255,0.95)"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Total Expense / Cost -->
+            <div class="metric-card metric-card--expense">
+                <div class="metric-card-top">
+                    <div>
+                        <span class="metric-label">TOTAL EXPENSE (ব্যয়)</span>
+                        <strong class="metric-value" id="metricExpense">৳0</strong>
+                    </div>
+                    <div class="metric-icon-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                </div>
+                <div class="metric-card-bottom">
+                    <span class="metric-sub">Procurement & delivery costs</span>
+                    <div class="metric-sparkline" aria-hidden="true">
+                        <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <path d="M0,12 Q25,20 50,8 T100,14" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2"/>
+                            <path d="M0,16 Q25,8 50,16 T100,10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="3,3"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Net Profit -->
+            <div class="metric-card metric-card--profit">
+                <div class="metric-card-top">
+                    <div>
+                        <span class="metric-label">NET PROFIT (মোট লাভ)</span>
+                        <strong class="metric-value" id="metricProfit">৳0</strong>
+                    </div>
+                    <div class="metric-icon-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+                    </div>
+                </div>
+                <div class="metric-card-bottom">
+                    <span class="metric-sub" id="metricProfitMargin">35% estimated net margin</span>
+                    <div class="metric-sparkline" aria-hidden="true">
+                        <svg viewBox="0 0 100 24" preserveAspectRatio="none">
+                            <rect x="4" y="16" width="6" height="8" rx="1" fill="rgba(255,255,255,0.3)"/>
+                            <rect x="18" y="12" width="6" height="12" rx="1" fill="rgba(255,255,255,0.5)"/>
+                            <rect x="32" y="8" width="6" height="16" rx="1" fill="rgba(255,255,255,0.7)"/>
+                            <rect x="46" y="10" width="6" height="14" rx="1" fill="rgba(255,255,255,0.6)"/>
+                            <rect x="60" y="4" width="6" height="20" rx="1" fill="rgba(255,255,255,0.85)"/>
+                            <rect x="74" y="6" width="6" height="18" rx="1" fill="rgba(255,255,255,0.75)"/>
+                            <rect x="88" y="1" width="6" height="23" rx="1" fill="rgba(255,255,255,0.95)"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </section>
@@ -187,9 +244,93 @@
             </div>
         </section>
 
-        <!-- TAB 3: ANALYTICS & INSIGHTS -->
+        <!-- TAB 3: ANALYTICS & FINANCIAL REPORTS -->
         <section class="admin-tab-content" id="tabPanelAnalytics" role="tabpanel" hidden>
-            <!-- Key Performance Indicators -->
+            <!-- 1. Interactive Sales & Profit Chart Panel (Matching Reference UI) -->
+            <div class="analytics-card chart-panel-card">
+                <div class="chart-panel-header">
+                    <div class="chart-panel-title-wrap">
+                        <h3>Sales &amp; Profit Analytics</h3>
+                        <p class="chart-panel-sub">Real-time revenue, cost, and net profit breakdown with period comparison.</p>
+                    </div>
+                    <div class="chart-timeframe-controls">
+                        <button type="button" class="btn-timeframe active" data-period="daily">Daily (30d)</button>
+                        <button type="button" class="btn-timeframe" data-period="monthly">Monthly (12m)</button>
+                        <button type="button" class="btn-timeframe" data-period="yearly">Yearly (5y)</button>
+                    </div>
+                </div>
+
+                <!-- Financial Metric Pills Bar -->
+                <div class="chart-stat-strip">
+                    <div class="chart-stat-box">
+                        <span class="cs-label">Live Inventory</span>
+                        <strong class="cs-val" id="chartStatProducts">0 items</strong>
+                        <span class="cs-sub" id="chartStatStockVal">৳0 valuation</span>
+                    </div>
+                    <div class="chart-stat-box cs-highlight-sales">
+                        <span class="cs-label">Total Sales (বিক্রয়)</span>
+                        <strong class="cs-val" id="chartStatSales">৳0</strong>
+                        <span class="cs-sub" id="chartStatOrdersCount">0 completed orders</span>
+                    </div>
+                    <div class="chart-stat-box cs-highlight-cost">
+                        <span class="cs-label">Product Cost &amp; Exp</span>
+                        <strong class="cs-val" id="chartStatCost">৳0</strong>
+                        <span class="cs-sub">Estimated COGS (65%)</span>
+                    </div>
+                    <div class="chart-stat-box cs-highlight-profit">
+                        <span class="cs-label">Net Profit (মোট লাভ)</span>
+                        <strong class="cs-val" id="chartStatProfit">৳0</strong>
+                        <span class="cs-sub">35% Gross profit margin</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic SVG Chart Canvas -->
+                <div class="chart-container-wrap">
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-dot dot-sales"></span> Total Sales (৳)</span>
+                        <span class="legend-item"><span class="legend-dot dot-profit"></span> Net Profit (৳)</span>
+                        <span class="legend-hint">Hover columns or points for exact details</span>
+                    </div>
+                    <div class="interactive-chart-viewport" id="chartViewport">
+                        <div class="chart-loading">Loading financial performance charts...</div>
+                    </div>
+                    <!-- Tooltip -->
+                    <div class="chart-tooltip" id="chartTooltip" hidden></div>
+                </div>
+            </div>
+
+            <!-- 2. Two-Column Dashboard Grid: Top Selling Products & Order Activity (Matching Screenshot) -->
+            <div class="analytics-two-col">
+                <!-- Top Selling Products Leaderboard -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <div>
+                            <h3>Top Selling Products</h3>
+                            <p class="analytics-card-sub">Ranked by customer sales volume and gross revenue</p>
+                        </div>
+                        <span class="analytics-tag">Leaderboard</span>
+                    </div>
+                    <div class="top-products-list" id="topProductsList">
+                        <div class="table-loading">Loading top selling products...</div>
+                    </div>
+                </div>
+
+                <!-- Recent Order Activity Feed (Matching Screenshot Bottom-Left) -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <div>
+                            <h3>Recent Order Activity</h3>
+                            <p class="analytics-card-sub">Live customer fulfillment &amp; dispatch stream</p>
+                        </div>
+                        <span class="analytics-tag">Realtime Stream</span>
+                    </div>
+                    <div class="order-activity-feed" id="orderActivityFeed">
+                        <div class="table-loading">Loading recent order activities...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Key Performance Indicators -->
             <div class="analytics-kpi-grid">
                 <div class="analytics-kpi-card">
                     <span class="kpi-label">Average Order Value (AOV)</span>
@@ -213,7 +354,7 @@
                 </div>
             </div>
 
-            <!-- Visual Distributions Grid -->
+            <!-- 4. Visual Distributions & Category Insights -->
             <div class="analytics-charts-grid">
                 <!-- Delivery Area Distribution -->
                 <div class="analytics-card">
@@ -272,28 +413,14 @@
                 </div>
             </div>
 
-            <!-- Two Column Section: Top Sellers & Category Revenue -->
-            <div class="analytics-two-col">
-                <!-- Top Sellers -->
-                <div class="analytics-card">
-                    <div class="analytics-card-header">
-                        <h3>Top Selling Peripherals</h3>
-                        <span class="analytics-tag">By Volume Sold</span>
-                    </div>
-                    <div class="top-products-list" id="topProductsList">
-                        <div class="table-loading">Loading top selling products...</div>
-                    </div>
+            <!-- Category Performance -->
+            <div class="analytics-card" style="margin-top: 1.5rem;">
+                <div class="analytics-card-header">
+                    <h3>Category Performance &amp; Margins</h3>
+                    <span class="analytics-tag">Revenue & Units</span>
                 </div>
-
-                <!-- Category Performance -->
-                <div class="analytics-card">
-                    <div class="analytics-card-header">
-                        <h3>Category Performance</h3>
-                        <span class="analytics-tag">Revenue & Units</span>
-                    </div>
-                    <div class="category-breakdown-list" id="categoryBreakdownList">
-                        <div class="table-loading">Loading category insights...</div>
-                    </div>
+                <div class="category-breakdown-list" id="categoryBreakdownList">
+                    <div class="table-loading">Loading category insights...</div>
                 </div>
             </div>
         </section>

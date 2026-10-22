@@ -42,7 +42,12 @@ const formatDate = (iso) => {
 
 // DOM Elements
 const metricRevenue     = document.getElementById('metricRevenue');
+const metricExpense     = document.getElementById('metricExpense');
+const metricProfit      = document.getElementById('metricProfit');
 const metricOrders      = document.getElementById('metricOrders');
+const metricOrdersSub   = document.getElementById('metricOrdersSub');
+const metricIncomeSub   = document.getElementById('metricIncomeSub');
+const metricProfitMargin= document.getElementById('metricProfitMargin');
 const metricProducts    = document.getElementById('metricProducts');
 const metricLowStock    = document.getElementById('metricLowStock');
 
@@ -97,6 +102,16 @@ const kpiCodCount       = document.getElementById('kpiCodCount');
 const kpiCardRevenue    = document.getElementById('kpiCardRevenue');
 const kpiCardCount      = document.getElementById('kpiCardCount');
 
+const chartStatProducts   = document.getElementById('chartStatProducts');
+const chartStatStockVal   = document.getElementById('chartStatStockVal');
+const chartStatSales      = document.getElementById('chartStatSales');
+const chartStatOrdersCount= document.getElementById('chartStatOrdersCount');
+const chartStatCost       = document.getElementById('chartStatCost');
+const chartStatProfit     = document.getElementById('chartStatProfit');
+const chartViewport       = document.getElementById('chartViewport');
+const chartTooltip        = document.getElementById('chartTooltip');
+const orderActivityFeed   = document.getElementById('orderActivityFeed');
+
 const distInsideDhaka   = document.getElementById('distInsideDhaka');
 const barInsideDhaka    = document.getElementById('barInsideDhaka');
 const distOutsideDhaka  = document.getElementById('distOutsideDhaka');
@@ -110,6 +125,8 @@ const topProductsList   = document.getElementById('topProductsList');
 const categoryBreakdownList = document.getElementById('categoryBreakdownList');
 
 let filterLowStockOnly = false;
+let timeseriesCache = { daily: [], monthly: [], yearly: [] };
+let currentTimeframe = 'daily';
 
 /* ================================================================
    TABS SWITCHING
@@ -151,19 +168,28 @@ const updateMetrics = () => {
     // Total Revenue (excluding cancelled orders)
     const validOrders = allOrders.filter(o => o.status !== 'cancelled');
     const revenue = validOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0);
-    metricRevenue.textContent = money(revenue);
+    const expense = revenue * 0.65;
+    const profit = revenue * 0.35;
+
+    if (metricRevenue) metricRevenue.textContent = money(revenue);
+    if (metricExpense) metricExpense.textContent = money(expense);
+    if (metricProfit) metricProfit.textContent = money(profit);
 
     // Total orders count
-    metricOrders.textContent = allOrders.length;
+    if (metricOrders) metricOrders.textContent = allOrders.length;
+    if (metricOrdersSub) metricOrdersSub.textContent = `${validOrders.length} valid / ${allOrders.length - validOrders.length} cancelled`;
+    if (metricIncomeSub) metricIncomeSub.textContent = `${validOrders.length} checkouts collected`;
+    if (metricProfitMargin) metricProfitMargin.textContent = `35% net margin (৳${Math.round(profit).toLocaleString()} profit)`;
+
     tabCountOrders.textContent = allOrders.length;
+    tabCountProducts.textContent = allProducts.length;
 
     // Total products count
-    metricProducts.textContent = allProducts.length;
-    tabCountProducts.textContent = allProducts.length;
+    if (metricProducts) metricProducts.textContent = allProducts.length;
 
     // Low stock count (<= 5)
     const lowStockItems = allProducts.filter(p => (p.stock_quantity ?? 0) <= 5);
-    metricLowStock.textContent = lowStockItems.length;
+    if (metricLowStock) metricLowStock.textContent = lowStockItems.length;
 
     // Update Low-Stock Banner
     if (lowStockBanner && lowStockAlertCount) {
@@ -565,12 +591,251 @@ window.quickRestockProduct = async (id, delta, btnEl) => {
 };
 
 /* ================================================================
-   ANALYTICS & INSIGHTS
+   ANALYTICS & FINANCIAL REPORTS (Matching Reference UI)
    ================================================================ */
+const renderInteractiveChart = (timeframe = 'daily') => {
+    if (!chartViewport) return;
+    const series = timeseriesCache[timeframe] || [];
+    
+    if (series.length === 0) {
+        chartViewport.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 2.5rem 1rem;">
+                <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📈</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--text);">No ${timeframe} sales data recorded yet</div>
+                <div style="font-size: 0.82rem; margin-top: 0.25rem;">Data points populate automatically as customers complete checkouts.</div>
+            </div>`;
+        return;
+    }
+
+    // Chart dimensions
+    const width = 800;
+    const height = 240;
+    const padX = 55;
+    const padY = 30;
+    const innerW = width - padX * 2;
+    const innerH = height - padY * 2;
+
+    const maxVal = Math.max(...series.map(p => Math.max(p.revenue, p.profit, 100)), 1000);
+    const n = series.length;
+
+    // Helper for coordinates
+    const getX = (idx) => n === 1 ? padX + innerW / 2 : padX + (idx / (n - 1)) * innerW;
+    const getY = (val) => padY + innerH - (val / maxVal) * innerH;
+
+    // Build SVG paths for Sales & Profit
+    const salesCoords = series.map((p, i) => ({ x: getX(i), y: getY(p.revenue), ...p }));
+    const profitCoords = series.map((p, i) => ({ x: getX(i), y: getY(p.profit), ...p }));
+
+    // Generate smooth bezier curve path string
+    const buildPath = (coords) => {
+        if (coords.length === 1) return `M ${coords[0].x} ${coords[0].y}`;
+        let d = `M ${coords[0].x} ${coords[0].y}`;
+        for (let i = 1; i < coords.length; i++) {
+            const prev = coords[i - 1];
+            const curr = coords[i];
+            const cp1x = prev.x + (curr.x - prev.x) / 2;
+            const cp1y = prev.y;
+            const cp2x = prev.x + (curr.x - prev.x) / 2;
+            const cp2y = curr.y;
+            d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+        }
+        return d;
+    };
+
+    const salesPathStr = buildPath(salesCoords);
+    const profitPathStr = buildPath(profitCoords);
+
+    const bottomY = padY + innerH;
+    const salesAreaStr = `${salesPathStr} L ${salesCoords[salesCoords.length - 1].x} ${bottomY} L ${salesCoords[0].x} ${bottomY} Z`;
+    const profitAreaStr = `${profitPathStr} L ${profitCoords[profitCoords.length - 1].x} ${bottomY} L ${profitCoords[0].x} ${bottomY} Z`;
+
+    // Horizontal grid lines
+    const gridSteps = 4;
+    let gridLinesSvg = '';
+    for (let s = 0; s <= gridSteps; s++) {
+        const val = (maxVal / gridSteps) * s;
+        const y = getY(val);
+        const label = val >= 1000 ? `৳${Math.round(val / 1000)}k` : `৳${Math.round(val)}`;
+        gridLinesSvg += `
+            <line x1="${padX}" y1="${y}" x2="${width - padX}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="3,3" />
+            <text x="${padX - 8}" y="${y + 4}" fill="var(--muted)" font-size="10" text-anchor="end">${label}</text>
+        `;
+    }
+
+    // X Axis labels
+    let xLabelsSvg = '';
+    const stepLabel = Math.max(1, Math.ceil(n / 8));
+    series.forEach((p, i) => {
+        if (i % stepLabel === 0 || i === n - 1) {
+            const x = getX(i);
+            xLabelsSvg += `<text x="${x}" y="${height - 8}" fill="var(--muted)" font-size="11" text-anchor="middle">${esc(p.label)}</text>`;
+        }
+    });
+
+    // Render SVG
+    chartViewport.innerHTML = `
+        <svg class="interactive-chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#10b981" stop-opacity="0.45"/>
+                    <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+                </linearGradient>
+                <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.45"/>
+                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0"/>
+                </linearGradient>
+            </defs>
+            ${gridLinesSvg}
+            ${xLabelsSvg}
+            <path d="${salesAreaStr}" fill="url(#salesGrad)" />
+            <path d="${profitAreaStr}" fill="url(#profitGrad)" />
+            <path d="${salesPathStr}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="${profitPathStr}" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            ${salesCoords.map((c, i) => `
+                <circle class="chart-point-sales" cx="${c.x}" cy="${c.y}" r="4.5" fill="#10b981" stroke="#ffffff" stroke-width="2" style="cursor:pointer;"/>
+                <circle class="chart-point-profit" cx="${profitCoords[i].x}" cy="${profitCoords[i].y}" r="4" fill="#f59e0b" stroke="#ffffff" stroke-width="1.8" style="cursor:pointer;"/>
+            `).join('')}
+            <line id="chartGuideLine" x1="0" y1="${padY}" x2="0" y2="${bottomY}" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="2,2" style="display:none;"/>
+        </svg>
+    `;
+
+    // Interactive mouse tracking
+    const svgEl = chartViewport.querySelector('.interactive-chart-svg');
+    const guideLine = chartViewport.querySelector('#chartGuideLine');
+
+    if (svgEl) {
+        svgEl.addEventListener('mousemove', (e) => {
+            const rect = svgEl.getBoundingClientRect();
+            const relX = (e.clientX - rect.left) / rect.width;
+            const svgX = relX * width;
+
+            let closestIdx = 0;
+            let minDist = Infinity;
+            salesCoords.forEach((c, idx) => {
+                const dist = Math.abs(c.x - svgX);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestIdx = idx;
+                }
+            });
+
+            const point = series[closestIdx];
+            if (!point) return;
+
+            if (guideLine) {
+                guideLine.setAttribute('x1', salesCoords[closestIdx].x);
+                guideLine.setAttribute('x2', salesCoords[closestIdx].x);
+                guideLine.style.display = 'block';
+            }
+
+            if (chartTooltip) {
+                const clientX = (salesCoords[closestIdx].x / width) * rect.width;
+                const clientY = (salesCoords[closestIdx].y / height) * rect.height;
+
+                chartTooltip.innerHTML = `
+                    <div class="chart-tooltip-date">${esc(point.label)} (${timeframe.toUpperCase()})</div>
+                    <div class="chart-tooltip-row">
+                        <span style="color:#10b981; font-weight:700;">● Gross Sales:</span>
+                        <strong>${money(point.revenue)}</strong>
+                    </div>
+                    <div class="chart-tooltip-row">
+                        <span style="color:#f59e0b; font-weight:700;">● Net Profit:</span>
+                        <strong>${money(point.profit)}</strong>
+                    </div>
+                    <div class="chart-tooltip-row">
+                        <span style="color:var(--muted);">● Orders Placed:</span>
+                        <span>${point.orders} orders (${point.units || 0} units)</span>
+                    </div>
+                `;
+                chartTooltip.style.left = `${clientX}px`;
+                chartTooltip.style.top = `${Math.max(10, clientY - 10)}px`;
+                chartTooltip.hidden = false;
+            }
+        });
+
+        svgEl.addEventListener('mouseleave', () => {
+            if (guideLine) guideLine.style.display = 'none';
+            if (chartTooltip) chartTooltip.hidden = true;
+        });
+    }
+};
+
+// Timeframe Switcher Buttons
+document.querySelectorAll('.btn-timeframe').forEach((btn) => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-timeframe').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTimeframe = btn.dataset.period || 'daily';
+        renderInteractiveChart(currentTimeframe);
+    });
+});
+
+// Render Order Activity Stream (Matching Screenshot Bottom-Left)
+const renderOrderActivity = (activities = []) => {
+    if (!orderActivityFeed) return;
+    if (!activities.length) {
+        orderActivityFeed.innerHTML = '<div class="table-loading">No recent order activity found.</div>';
+        return;
+    }
+
+    const iconMap = {
+        paid: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
+        delivered: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+        shipped: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+        pending: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+        cancelled: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+    };
+
+    orderActivityFeed.innerHTML = activities.map((act) => {
+        const st = (act.status || 'pending').toLowerCase();
+        const iconSvg = iconMap[st] || iconMap.pending;
+        const areaLabel = act.delivery_area === 'inside_dhaka' ? 'Inside Dhaka' : 'Outside Dhaka';
+        const methodLabel = act.payment_method === 'cod' ? 'Cash on Delivery' : 'Stripe Card';
+
+        return `
+            <div class="activity-item">
+                <div class="activity-icon-badge ${st}">
+                    ${iconSvg}
+                </div>
+                <div class="activity-info">
+                    <div class="activity-title">
+                        <span>${esc(act.customer_name || 'Customer')}</span>
+                        <span class="activity-order-id">#ORD-${act.id}</span>
+                    </div>
+                    <div class="activity-meta">
+                        ${areaLabel} • ${methodLabel} • <strong style="text-transform: capitalize;">${st}</strong>
+                    </div>
+                </div>
+                <div class="activity-right">
+                    <div class="activity-amount">${money(act.total_amount)}</div>
+                    <div class="activity-time">${formatDate(act.created_at)}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
 const fetchAnalytics = async () => {
     try {
-        const data = await apiRequest('/orders/admin/analytics', 'GET', null, true);
-        const { overview = {}, topProducts = [], categoryStats = [] } = data;
+        const [data, tsData] = await Promise.all([
+            apiRequest('/orders/admin/analytics', 'GET', null, true),
+            apiRequest('/orders/admin/timeseries', 'GET', null, true).catch(() => ({ daily: [], monthly: [], yearly: [] }))
+        ]);
+
+        timeseriesCache = tsData || { daily: [], monthly: [], yearly: [] };
+
+        const { overview = {}, topProducts = [], categoryStats = [], recentActivity = [] } = data;
+
+        // Chart Stat Strip
+        if (chartStatProducts) chartStatProducts.textContent = `${overview.total_products_count || allProducts.length} items`;
+        if (chartStatStockVal) chartStatStockVal.textContent = `${money(overview.inventory_valuation || 0)} stock value`;
+        if (chartStatSales) chartStatSales.textContent = money(overview.total_revenue || 0);
+        if (chartStatOrdersCount) chartStatOrdersCount.textContent = `${overview.total_orders || 0} completed orders (${overview.total_units_sold || 0} units)`;
+        if (chartStatCost) chartStatCost.textContent = money(overview.total_expense || (overview.total_revenue * 0.65) || 0);
+        if (chartStatProfit) chartStatProfit.textContent = money(overview.total_profit || (overview.total_revenue * 0.35) || 0);
+
+        // Render Interactive SVG Chart
+        renderInteractiveChart(currentTimeframe);
 
         // KPI calculations
         if (kpiAov) kpiAov.textContent = money(overview.avg_order_value || 0);
@@ -619,24 +884,30 @@ const fetchAnalytics = async () => {
             if (!topProducts.length) {
                 topProductsList.innerHTML = '<div class="table-loading">No sales recorded yet.</div>';
             } else {
-                topProductsList.innerHTML = topProducts.map((p, idx) => `
-                    <div class="top-product-item">
-                        <div class="top-prod-left">
-                            <span class="top-prod-rank">#${idx + 1}</span>
-                            <img src="${esc(p.image_url || 'images/nebula_keyboard.jpg')}" alt="" class="top-prod-img" onerror="this.src='images/nebula_keyboard.jpg'">
-                            <div class="top-prod-info">
-                                <div class="top-prod-name">${esc(p.name)}</div>
-                                <div class="top-prod-meta">${esc(p.category || 'Gear')} • Stock: ${p.stock_quantity ?? 0}</div>
+                topProductsList.innerHTML = topProducts.map((p, idx) => {
+                    const stars = '★'.repeat(Math.round(p.avg_rating || 5)) + '☆'.repeat(5 - Math.round(p.avg_rating || 5));
+                    return `
+                        <div class="top-product-item">
+                            <div class="top-prod-left">
+                                <span class="top-prod-rank">#${idx + 1}</span>
+                                <img src="${esc(p.image_url || 'images/nebula_keyboard.jpg')}" alt="" class="top-prod-img" onerror="this.src='images/nebula_keyboard.jpg'">
+                                <div class="top-prod-info">
+                                    <div class="top-prod-name">${esc(p.name)}</div>
+                                    <div class="top-prod-meta">${esc(p.category || 'Gear')} • <span style="color:#f59e0b;">${stars}</span> • Stock: ${p.stock_quantity ?? 0}</div>
+                                </div>
+                            </div>
+                            <div class="top-prod-right">
+                                <div class="top-prod-sold">${p.total_sold} Sold</div>
+                                <div class="top-prod-rev">${money(p.total_revenue)} (Profit: ${money(p.total_profit || (p.total_revenue * 0.35))})</div>
                             </div>
                         </div>
-                        <div class="top-prod-right">
-                            <div class="top-prod-sold">${p.total_sold} Sold</div>
-                            <div class="top-prod-rev">${money(p.total_revenue)}</div>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
+
+        // Render Order Activity Stream
+        renderOrderActivity(recentActivity);
 
         // Category Performance List
         if (categoryBreakdownList) {
@@ -652,7 +923,7 @@ const fetchAnalytics = async () => {
                                     <span>${esc(c.category)}</span>
                                     <span class="cat-count">(${c.product_count} items, ${c.units_sold} sold)</span>
                                 </span>
-                                <span class="cat-rev">${money(c.category_revenue)}</span>
+                                <span class="cat-rev">${money(c.category_revenue)} (Profit: ${money(c.category_profit || (c.category_revenue * 0.35))})</span>
                             </div>
                             <div class="progress-bar-track">
                                 <div class="progress-bar-fill progress-bar-inside" style="width: ${fillWidth}%"></div>
