@@ -66,9 +66,9 @@ const orderHTML = (order) => {
             <div class="order-total-block">
                 <span class="meta-label">Total</span>
                 <span class="order-total-amount">${money(order.total_amount)}</span>
-                ${order.delivery_fee
-                    ? `<span class="order-payment-id">Incl. ${money(order.delivery_fee)} delivery</span>`
-                    : ''}
+                <span class="order-payment-id" style="color:var(--muted)">
+                    Incl. ${money(Number(order.delivery_fee) || (order.delivery_area === 'outside_dhaka' ? 120 : 60))} shipping
+                </span>
             </div>
         </div>
 
@@ -226,8 +226,9 @@ const triggerPrintBtn = document.getElementById('triggerPrintBtn');
 
 const renderInvoiceHTML = (order, items, user) => {
     const subtotal = items.reduce((sum, i) => sum + (Number(i.price_at_purchase) * Number(i.quantity)), 0);
-    const deliveryFee = Number(order.delivery_fee ?? (order.delivery_area === 'outside_dhaka' ? 120 : 60));
-    const grandTotal = Number(order.total_amount || (subtotal + deliveryFee));
+    const deliveryFee = Number(order.delivery_fee) || (order.delivery_area === 'outside_dhaka' ? 120 : 60);
+    // Use DB total_amount as ground truth (already includes delivery fee)
+    const grandTotal = Number(order.total_amount) || (subtotal + deliveryFee);
 
     const invoiceDate = order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'

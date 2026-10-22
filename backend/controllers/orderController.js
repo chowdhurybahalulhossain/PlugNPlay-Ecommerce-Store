@@ -26,7 +26,8 @@ const viewOrderDetails = async (req, res) => {
         }
 
         const itemsResult = await pool.query(
-            `SELECT oi.quantity, oi.price_at_purchase, p.name, p.image_url
+            `SELECT oi.quantity, oi.price_at_purchase,
+                    p.name AS product_name, p.name, p.image_url
              FROM order_items oi
              JOIN products p ON oi.product_id = p.id
              WHERE oi.order_id = $1`,
