@@ -22,6 +22,26 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        req.user = null;
+        return next();
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+    } catch (err) {
+        req.user = null;
+    }
+    next();
+};
+
 const isAdmin = (req, res, next) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
@@ -29,4 +49,4 @@ const isAdmin = (req, res, next) => {
     next();
 };
 
-module.exports = { verifyToken, isAdmin };
+module.exports = { verifyToken, optionalAuth, isAdmin };

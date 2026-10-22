@@ -41,6 +41,8 @@ const state = {
 
 let selected = null;
 let qty = 1;
+let ratingsMap = {};
+let wishlistIds = new Set();
 
 // Escaper & Money Formatter
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => (
@@ -107,12 +109,27 @@ const imageOrIcon = (p) => {
     return iconFor(p);
 };
 
-const cardHTML = (p) => `
+const cardHTML = (p) => {
+    const inWishlist = wishlistIds.has(p.id);
+    const r = ratingsMap[p.id];
+    const ratingHtml = r && r.total_reviews > 0
+        ? `<div class="card-stars"><span class="star-icon">★</span> <strong>${r.avg_rating}</strong> <span class="card-rev-count">(${r.total_reviews})</span></div>`
+        : `<div class="card-stars new"><span class="star-icon">★</span> <strong>5.0</strong> <span class="card-rev-count">(Verified)</span></div>`;
+
+    return `
     <article class="card" data-id="${p.id}" tabindex="0" style="cursor: pointer;">
         ${stockTag(p)}
+        <button type="button" class="btn-card-heart ${inWishlist ? 'active' : ''}" data-wishlist-id="${p.id}" title="${inWishlist ? 'Remove from wishlist' : 'Save to wishlist'}" aria-label="Save to wishlist">
+            <svg viewBox="0 0 24 24" fill="${inWishlist ? '#f43f5e' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+        </button>
         <div class="card-art">${imageOrIcon(p)}</div>
         <div class="card-body">
-            <p class="cat">${esc(p.category)}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <p class="cat">${esc(p.category)}</p>
+                ${ratingHtml}
+            </div>
             <h3>${esc(p.name)}</h3>
             <div class="card-foot">
                 <span class="price">${money(p.price)}</span>
@@ -120,6 +137,7 @@ const cardHTML = (p) => `
             </div>
         </div>
     </article>`;
+};
 
 // Render Category Chips with Live Counts
 const renderChips = () => {
@@ -239,7 +257,19 @@ const resetAllFilters = () => {
 const loadProducts = async () => {
     gridEl.innerHTML = Array(6).fill('<div class="skeleton"></div>').join('');
     try {
-        state.products = await apiRequest('/products');
+        const promises = [
+            apiRequest('/products'),
+            apiRequest('/reviews/summary').catch(() => ({}))
+        ];
+        if (getToken()) {
+            promises.push(apiRequest('/wishlist/ids', 'GET', null, true).catch(() => []));
+        }
+
+        const [prods, ratings, wIds = []] = await Promise.all(promises);
+        state.products = prods || [];
+        ratingsMap = ratings || {};
+        wishlistIds = new Set(Array.isArray(wIds) ? wIds : []);
+
         renderChips();
         renderProducts();
     } catch (err) {
@@ -355,10 +385,25 @@ sortEl?.addEventListener('change', () => {
     renderProducts();
 });
 
-// Grid Events: Card Click, Add to Cart, Clear Filters
+// Grid Events: Card Click, Add to Cart, Clear Filters, Wishlist
 gridEl.addEventListener('click', (e) => {
     if (e.target.closest('#retryLoad')) return loadProducts();
     if (e.target.closest('#clearAllFiltersBtn')) return resetAllFilters();
+
+    const wishlistBtn = e.target.closest('[data-wishlist-id]');
+    if (wishlistBtn) {
+        e.stopPropagation();
+        const pId = Number(wishlistBtn.dataset.wishlistId);
+        window.toggleWishlist(pId, wishlistBtn).then((inW) => {
+            if (typeof inW === 'boolean') {
+                if (inW) wishlistIds.add(pId);
+                else wishlistIds.delete(pId);
+                const svgEl = wishlistBtn.querySelector('svg');
+                if (svgEl) svgEl.setAttribute('fill', inW ? '#f43f5e' : 'none');
+            }
+        });
+        return;
+    }
 
     const addBtn = e.target.closest('[data-add]');
     if (addBtn) return addToCart(Number(addBtn.dataset.add));

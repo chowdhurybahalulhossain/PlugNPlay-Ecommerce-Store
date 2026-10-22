@@ -111,6 +111,218 @@ const renderCardHTML = (p) => `
         </div>
     </article>`;
 
+const renderStarString = (rating) => {
+    const full = Math.round(Number(rating) || 0);
+    return '★'.repeat(Math.max(0, Math.min(5, full))) + '☆'.repeat(Math.max(0, 5 - full));
+};
+
+let currentRatingValue = 5;
+
+const updateStarPickerVisual = (val) => {
+    currentRatingValue = val;
+    const input = document.getElementById('reviewRatingInput');
+    if (input) input.value = val;
+    const btns = document.querySelectorAll('#starPicker .star-btn');
+    btns.forEach((btn) => {
+        const btnVal = Number(btn.dataset.val || 1);
+        if (btnVal <= val) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+};
+
+let reviewFormInitialized = false;
+const setupReviewForm = () => {
+    if (reviewFormInitialized) return;
+    reviewFormInitialized = true;
+
+    const openBtn = document.getElementById('openReviewModalBtn');
+    const writeCard = document.getElementById('writeReviewCard');
+    const closeBtn = document.getElementById('closeWriteRevBtn');
+    const cancelBtn = document.getElementById('cancelReviewBtn');
+    const form = document.getElementById('reviewForm');
+    const starPicker = document.getElementById('starPicker');
+
+    if (starPicker) {
+        starPicker.querySelectorAll('.star-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const val = Number(btn.dataset.val || 5);
+                updateStarPickerVisual(val);
+            });
+        });
+    }
+
+    if (openBtn && writeCard) {
+        openBtn.addEventListener('click', () => {
+            if (!getToken()) {
+                showToast('Please sign in to write a review', 'error');
+                setTimeout(() => {
+                    window.location.href = `login.html?redirect=product.html?id=${productId}`;
+                }, 1200);
+                return;
+            }
+            writeCard.hidden = false;
+            writeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
+    const hideForm = () => {
+        if (writeCard) writeCard.hidden = true;
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', hideForm);
+    if (cancelBtn) cancelBtn.addEventListener('click', hideForm);
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!getToken()) {
+                showToast('Please sign in to submit a review', 'error');
+                return;
+            }
+            const rating = Number(document.getElementById('reviewRatingInput')?.value || 5);
+            const title = document.getElementById('reviewTitleInput')?.value?.trim() || '';
+            const comment = document.getElementById('reviewCommentInput')?.value?.trim() || '';
+
+            if (!comment) {
+                showToast('Please write your review feedback', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitReviewBtn');
+            try {
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting…';
+                }
+                await apiRequest(`/reviews/product/${productId}`, 'POST', { rating, title, comment }, true);
+                showToast('Your review has been published!');
+                hideForm();
+                await loadReviews();
+            } catch (err) {
+                showToast(err.message || 'Failed to submit review', 'error');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Review';
+                }
+            }
+        });
+    }
+};
+
+const loadReviews = async () => {
+    const reviewsFeed = document.getElementById('reviewsFeed');
+    try {
+        const data = await apiRequest(`/reviews/product/${productId}`, 'GET', null, Boolean(getToken()));
+        const { summary, reviews = [], userReview = null } = data || {};
+
+        const avg = summary?.averageRating ? Number(summary.averageRating) : 5.0;
+        const total = summary?.totalReviews ? Number(summary.totalReviews) : 0;
+        const breakdown = summary?.ratingBreakdown || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+        // Update Top Product Details Rating Link
+        const productStars = document.getElementById('productStars');
+        const productScore = document.getElementById('productScore');
+        const productReviewsCount = document.getElementById('productReviewsCount');
+        if (productStars) productStars.textContent = renderStarString(avg);
+        if (productScore) productScore.textContent = avg.toFixed(1);
+        if (productReviewsCount) productReviewsCount.textContent = `(${total} review${total === 1 ? '' : 's'})`;
+
+        // Update Reviews Section Overview Card
+        const revBigScore = document.getElementById('revBigScore');
+        const revBigStars = document.getElementById('revBigStars');
+        const revTotalLabel = document.getElementById('revTotalLabel');
+        if (revBigScore) revBigScore.textContent = avg.toFixed(1);
+        if (revBigStars) revBigStars.textContent = renderStarString(avg);
+        if (revTotalLabel) revTotalLabel.textContent = `Based on ${total} verified review${total === 1 ? '' : 's'}`;
+
+        // Breakdown bars
+        for (let star = 1; star <= 5; star++) {
+            const count = Number(breakdown[star] || 0);
+            const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            const barFill = document.getElementById(`barStar${star}`);
+            const countSpan = document.getElementById(`countStar${star}`);
+            if (barFill) barFill.style.width = `${pct}%`;
+            if (countSpan) countSpan.textContent = count;
+        }
+
+        // If user already reviewed, pre-fill form
+        if (userReview) {
+            const titleInput = document.getElementById('reviewTitleInput');
+            const commentInput = document.getElementById('reviewCommentInput');
+            const writeRevTitle = document.getElementById('writeRevTitle');
+            const submitBtn = document.getElementById('submitReviewBtn');
+            const openReviewModalBtn = document.getElementById('openReviewModalBtn');
+
+            if (titleInput && !titleInput.value) titleInput.value = userReview.title || '';
+            if (commentInput && !commentInput.value) commentInput.value = userReview.comment || '';
+            if (userReview.rating) updateStarPickerVisual(Number(userReview.rating));
+            if (writeRevTitle) writeRevTitle.textContent = 'Edit Your Review';
+            if (submitBtn) submitBtn.textContent = 'Update Review';
+            if (openReviewModalBtn) {
+                openReviewModalBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Your Review`;
+            }
+        }
+
+        // Render reviews feed
+        if (!reviewsFeed) return;
+
+        if (reviews.length === 0) {
+            reviewsFeed.innerHTML = `
+                <div class="rev-empty-state">
+                    <div class="rev-empty-icon">★</div>
+                    <h3>No reviews yet for this gear</h3>
+                    <p>Be the first enthusiast to share hands-on feedback and get a verified buyer badge!</p>
+                </div>`;
+            return;
+        }
+
+        reviewsFeed.innerHTML = reviews.map((r) => {
+            const initial = (r.user_name || 'U').charAt(0).toUpperCase();
+            const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'Recent';
+
+            return `
+                <article class="review-card" data-review-id="${r.id}">
+                    <div class="rev-card-header">
+                        <div class="rev-author-meta">
+                            <div class="rev-avatar">${esc(initial)}</div>
+                            <div>
+                                <div class="rev-author-name">
+                                    ${esc(r.user_name || 'Verified Explorer')}
+                                    ${r.is_verified_buyer ? `
+                                        <span class="badge-verified-buyer" title="Verified purchaser of this product">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                            Verified Buyer
+                                        </span>` : ''}
+                                </div>
+                                <div class="rev-date">${esc(dateStr)}</div>
+                            </div>
+                        </div>
+                        <div class="rev-card-stars" aria-label="${r.rating} out of 5 stars">${renderStarString(r.rating)}</div>
+                    </div>
+                    ${r.title ? `<h4 class="rev-title">${esc(r.title)}</h4>` : ''}
+                    <p class="rev-text">${esc(r.comment)}</p>
+                </article>`;
+        }).join('');
+
+    } catch (err) {
+        console.error('Failed to load reviews:', err);
+        if (reviewsFeed) {
+            reviewsFeed.innerHTML = `<div class="rev-empty-state"><p style="color:var(--muted)">Unable to load customer reviews at this time.</p></div>`;
+        }
+    }
+};
+
 const loadProductDetails = async () => {
     if (!productId) {
         window.location.href = 'index.html';
@@ -182,11 +394,11 @@ const loadProductDetails = async () => {
                 <span class="stock-pill ${stockClass}">${stockText}</span>
             </div>
             <h1 class="product-title">${esc(currentProduct.name)}</h1>
-            <div class="rating-row">
-                <div class="stars">★★★★★</div>
-                <span class="rating-score">4.9</span>
-                <span class="rating-count">(124 verified reviews)</span>
-            </div>
+            <a href="#reviewsSection" class="rating-row" id="productRatingRow" style="text-decoration:none; cursor:pointer;" title="Jump to customer reviews">
+                <div class="stars" id="productStars">★★★★★</div>
+                <span class="rating-score" id="productScore">5.0</span>
+                <span class="rating-count" id="productReviewsCount">(0 reviews)</span>
+            </a>
             <div class="price-row">
                 <span class="current-price">${money(currentProduct.price)}</span>
                 <span class="original-price">${money(Math.round(currentProduct.price * 1.15))}</span>
@@ -218,6 +430,11 @@ const loadProductDetails = async () => {
                     ${currentProduct.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
                 </button>
                 <button class="btn-buy-now" id="buyNowBtn" ${disabledAttr}>Buy Now</button>
+                <button type="button" class="btn btn-wishlist-toggle" id="productWishlistBtn" title="Save to wishlist" aria-label="Save to wishlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
             </div>`;
 
         // Re-bind controls
@@ -226,6 +443,27 @@ const loadProductDetails = async () => {
         const qDisp  = document.getElementById('qtyDisplay');
         const addBtn = document.getElementById('addToCartBtn');
         const buyBtn = document.getElementById('buyNowBtn');
+        const wishBtn= document.getElementById('productWishlistBtn');
+
+        // Wishlist button state & click handler
+        if (wishBtn && getToken()) {
+            apiRequest('/wishlist/ids', 'GET', null, true).then(ids => {
+                if (Array.isArray(ids) && ids.includes(currentProduct.id)) {
+                    wishBtn.classList.add('active');
+                    const svg = wishBtn.querySelector('svg');
+                    if (svg) svg.setAttribute('fill', '#f43f5e');
+                }
+            }).catch(() => {});
+        }
+
+        wishBtn?.addEventListener('click', () => {
+            window.toggleWishlist(currentProduct.id, wishBtn).then(inW => {
+                if (typeof inW === 'boolean') {
+                    const svg = wishBtn.querySelector('svg');
+                    if (svg) svg.setAttribute('fill', inW ? '#f43f5e' : 'none');
+                }
+            });
+        });
 
         qMinus.addEventListener('click', () => {
             currentQty = Math.max(1, currentQty - 1);
@@ -267,6 +505,10 @@ const loadProductDetails = async () => {
                 <div class="spec-name">${esc(s.name)}</div>
                 <div class="spec-val">${esc(s.val)}</div>
             </div>`).join('');
+
+        // Load customer reviews and setup review form
+        loadReviews();
+        setupReviewForm();
 
         // Load recommended products
         loadRelated();

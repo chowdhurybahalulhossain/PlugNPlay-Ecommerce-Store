@@ -42,6 +42,48 @@ const updateCartCount = async (animate = false) => {
     }
 };
 
+// Update the wishlist count badge in the navbar
+const updateWishlistCount = async (animate = false) => {
+    const badge = document.getElementById('wishlistCount');
+    if (!badge || !getToken()) return;
+    try {
+        const ids = await apiRequest('/wishlist/ids', 'GET', null, true);
+        const total = Array.isArray(ids) ? ids.length : 0;
+        badge.textContent = total;
+        badge.hidden = total === 0;
+        if (animate) {
+            badge.classList.remove('bump');
+            void badge.offsetWidth;
+            badge.classList.add('bump');
+        }
+    } catch (err) {
+        // Ignore errors
+    }
+};
+
+// Global toggle wishlist helper for product cards and details
+window.toggleWishlist = async (productId, btnEl) => {
+    if (!getToken()) {
+        showToast('Please sign in to save items to your wishlist', 'info');
+        setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+        return;
+    }
+    try {
+        if (btnEl) btnEl.classList.add('pumping');
+        const res = await apiRequest(`/wishlist/toggle/${productId}`, 'POST', null, true);
+        if (btnEl) {
+            btnEl.classList.toggle('active', res.inWishlist);
+            btnEl.classList.remove('pumping');
+        }
+        updateWishlistCount(true);
+        showToast(res.message, res.inWishlist ? 'info' : 'warning');
+        return res.inWishlist;
+    } catch (err) {
+        if (btnEl) btnEl.classList.remove('pumping');
+        showToast(err.message || 'Failed to update wishlist', 'error');
+    }
+};
+
 // Turn "Sign in" into "Sign out" when logged in
 const initAuthLink = () => {
     const link = document.getElementById('authLink');
@@ -139,6 +181,28 @@ const initProfileNav = () => {
     }
 };
 
+// Wishlist navigation link in navbar
+const initWishlistNav = () => {
+    const nav = document.querySelector('.nav-links');
+    if (!nav) return;
+    let existing = nav.querySelector('a[href="wishlist.html"]');
+    if (!existing) {
+        const link = document.createElement('a');
+        link.href = 'wishlist.html';
+        link.className = 'wishlist-link';
+        link.innerHTML = `Wishlist <span class="badge" id="wishlistCount" hidden>0</span>`;
+        if (window.location.pathname.endsWith('wishlist.html')) {
+            link.classList.add('active');
+        }
+        const cartLink = nav.querySelector('a[href="cart.html"]');
+        if (cartLink) {
+            nav.insertBefore(link, cartLink);
+        } else {
+            nav.appendChild(link);
+        }
+    }
+};
+
 // Footer Newsletter handler
 const initFooterNewsletter = () => {
     const form = document.getElementById('footerNewsletterForm');
@@ -162,6 +226,8 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 document.querySelectorAll('[data-spotlight]').forEach(initSpotlight);
 initAuthLink();
 initAdminNav();
+initWishlistNav();
 initProfileNav();
 initFooterNewsletter();
 updateCartCount();
+updateWishlistCount();
