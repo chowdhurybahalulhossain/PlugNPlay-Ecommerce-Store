@@ -344,13 +344,8 @@ const loadProductDetails = async () => {
         </div>`;
 
     try {
-        // ✅ Fetch product data and best sellers in parallel
-        const [prodData, bestSellers = []] = await Promise.all([
-            apiRequest(`/products/${productId}`),
-            apiRequest('/products/best-sellers?limit=6').catch(() => [])
-        ]);
-        currentProduct = prodData;
-        const isBestSeller = bestSellers.some(b => Number(b.id) === Number(currentProduct.id));
+        // ✅ Fetch product data first
+        currentProduct = await apiRequest(`/products/${productId}`);
 
         // Then rebuild the layout (replacing skeleton)
         document.getElementById('productLayout').innerHTML = `
@@ -391,14 +386,10 @@ const loadProductDetails = async () => {
         }
 
         const disabledAttr = currentProduct.stock_quantity <= 0 ? 'disabled' : '';
-        const bestSellerPill = isBestSeller 
-            ? `<span class="cat-pill" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: #fff; border:none; font-weight:800; box-shadow: 0 4px 12px rgba(245,158,11,0.35);">🔥 Best Seller</span>` 
-            : '';
 
         // Build details panel
         productDetails.innerHTML = `
             <div class="product-badge-row">
-                ${bestSellerPill}
                 <span class="cat-pill">${esc(currentProduct.category || 'Gear')}</span>
                 <span class="stock-pill ${stockClass}">${stockText}</span>
             </div>
