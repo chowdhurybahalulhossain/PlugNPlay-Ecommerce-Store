@@ -45,6 +45,18 @@
                         <span class="step-badge">1</span>
                         <h2>Shipping & Delivery Area</h2>
                     </div>
+
+                    <!-- Saved Addresses Quick Selector -->
+                    <div class="saved-addresses-selector" id="savedAddressesSection" hidden>
+                        <div class="saved-addr-head">
+                            <span class="field-label" style="margin-bottom:0">Choose from Saved Addresses</span>
+                            <a href="profile.html" class="manage-addr-link" target="_blank">+ Manage Address Book</a>
+                        </div>
+                        <div class="saved-addr-chips" id="savedAddrChips">
+                            <!-- Populated with saved addresses -->
+                        </div>
+                    </div>
+
                     <label class="field-label" for="shippingAddress">Delivery address</label>
                     <textarea id="shippingAddress" class="field-input" rows="3"
                         placeholder="House no., Road, Area, City, ZIP" required></textarea>

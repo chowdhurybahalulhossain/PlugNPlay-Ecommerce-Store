@@ -93,6 +93,27 @@
             </div>
         </section>
 
+        <!-- Low-Stock Alert Banner -->
+        <div class="low-stock-banner" id="lowStockBanner" hidden>
+            <div class="low-stock-banner-left">
+                <span class="low-stock-pulse-dot" aria-hidden="true"></span>
+                <div class="low-stock-text">
+                    <h3 class="low-stock-title">⚠️ Inventory Warning: <span id="lowStockAlertCount">0</span> items running critically low (&le; 5 units)</h3>
+                    <p class="low-stock-subtitle">Restock these fast-moving peripherals to prevent checkout out-of-stock bounce.</p>
+                </div>
+            </div>
+            <div class="low-stock-banner-actions">
+                <button type="button" class="btn btn-warning-soft" id="filterLowStockBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    Filter Low Stock
+                </button>
+                <button type="button" class="btn btn-warning" id="openRestockHubBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Quick Restock Hub
+                </button>
+            </div>
+        </div>
+
         <!-- Navigation Tabs -->
         <nav class="admin-tabs" role="tablist">
             <button class="admin-tab active" id="tabBtnProducts" role="tab" aria-selected="true" data-tab="products">
@@ -102,6 +123,10 @@
             <button class="admin-tab" id="tabBtnOrders" role="tab" aria-selected="false" data-tab="orders">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                 Customer Orders (<span id="tabCountOrders">0</span>)
+            </button>
+            <button class="admin-tab" id="tabBtnAnalytics" role="tab" aria-selected="false" data-tab="analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                Analytics &amp; Insights
             </button>
         </nav>
 
@@ -161,6 +186,117 @@
                 <div class="table-loading">Loading customer orders...</div>
             </div>
         </section>
+
+        <!-- TAB 3: ANALYTICS & INSIGHTS -->
+        <section class="admin-tab-content" id="tabPanelAnalytics" role="tabpanel" hidden>
+            <!-- Key Performance Indicators -->
+            <div class="analytics-kpi-grid">
+                <div class="analytics-kpi-card">
+                    <span class="kpi-label">Average Order Value (AOV)</span>
+                    <strong class="kpi-value" id="kpiAov">৳0</strong>
+                    <span class="kpi-sub">Avg spend per customer checkout</span>
+                </div>
+                <div class="analytics-kpi-card">
+                    <span class="kpi-label">Fulfillment Rate</span>
+                    <strong class="kpi-value" id="kpiFulfillment">0%</strong>
+                    <span class="kpi-sub"><span id="kpiDeliveredCount">0</span> delivered / <span id="kpiTotalOrders">0</span> valid</span>
+                </div>
+                <div class="analytics-kpi-card">
+                    <span class="kpi-label">COD Order Volume</span>
+                    <strong class="kpi-value" id="kpiCodRevenue">৳0</strong>
+                    <span class="kpi-sub"><span id="kpiCodCount">0</span> cash on delivery orders</span>
+                </div>
+                <div class="analytics-kpi-card">
+                    <span class="kpi-label">Card / Stripe Volume</span>
+                    <strong class="kpi-value" id="kpiCardRevenue">৳0</strong>
+                    <span class="kpi-sub"><span id="kpiCardCount">0</span> instant prepaid transactions</span>
+                </div>
+            </div>
+
+            <!-- Visual Distributions Grid -->
+            <div class="analytics-charts-grid">
+                <!-- Delivery Area Distribution -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3>Delivery Area Breakdown</h3>
+                        <span class="analytics-tag">Zone split</span>
+                    </div>
+                    <div class="distribution-bars">
+                        <div class="dist-row">
+                            <div class="dist-labels">
+                                <span>Inside Dhaka (৳60)</span>
+                                <strong id="distInsideDhaka">0 orders (0%)</strong>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill progress-bar-inside" id="barInsideDhaka" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="dist-row">
+                            <div class="dist-labels">
+                                <span>Outside Dhaka (৳120)</span>
+                                <strong id="distOutsideDhaka">0 orders (0%)</strong>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill progress-bar-outside" id="barOutsideDhaka" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Split -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3>Payment Methods Split</h3>
+                        <span class="analytics-tag">Prepaid vs Postpaid</span>
+                    </div>
+                    <div class="distribution-bars">
+                        <div class="dist-row">
+                            <div class="dist-labels">
+                                <span>Cash on Delivery (COD)</span>
+                                <strong id="distCod">0 orders (0%)</strong>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill progress-bar-cod" id="barCod" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="dist-row">
+                            <div class="dist-labels">
+                                <span>Stripe Credit / Debit Card</span>
+                                <strong id="distCard">0 orders (0%)</strong>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill progress-bar-card" id="barCard" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two Column Section: Top Sellers & Category Revenue -->
+            <div class="analytics-two-col">
+                <!-- Top Sellers -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3>Top Selling Peripherals</h3>
+                        <span class="analytics-tag">By Volume Sold</span>
+                    </div>
+                    <div class="top-products-list" id="topProductsList">
+                        <div class="table-loading">Loading top selling products...</div>
+                    </div>
+                </div>
+
+                <!-- Category Performance -->
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h3>Category Performance</h3>
+                        <span class="analytics-tag">Revenue & Units</span>
+                    </div>
+                    <div class="category-breakdown-list" id="categoryBreakdownList">
+                        <div class="table-loading">Loading category insights...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- PRODUCT MODAL (Add / Edit) -->
@@ -208,6 +344,22 @@
                     <button type="submit" class="btn btn-primary" id="saveProductBtn">Save Product</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- QUICK RESTOCK HUB MODAL -->
+    <div class="modal-overlay" id="restockModal" hidden>
+        <div class="modal-card modal-card--restock">
+            <div class="modal-header">
+                <div>
+                    <h2>⚡ Quick Restock Hub</h2>
+                    <p class="admin-sub" style="font-size:0.82rem; margin:0.2rem 0 0">1-click inventory replenishment for critical & low stock items</p>
+                </div>
+                <button class="modal-close-btn" id="closeRestockModalBtn">&times;</button>
+            </div>
+            <div class="restock-items-container" id="restockItemsContainer">
+                <div class="table-loading">Loading low stock items...</div>
+            </div>
         </div>
     </div>
 

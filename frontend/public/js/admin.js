@@ -46,10 +46,17 @@ const metricOrders      = document.getElementById('metricOrders');
 const metricProducts    = document.getElementById('metricProducts');
 const metricLowStock    = document.getElementById('metricLowStock');
 
+const lowStockBanner    = document.getElementById('lowStockBanner');
+const lowStockAlertCount= document.getElementById('lowStockAlertCount');
+const filterLowStockBtn = document.getElementById('filterLowStockBtn');
+const openRestockHubBtn = document.getElementById('openRestockHubBtn');
+
 const tabBtnProducts    = document.getElementById('tabBtnProducts');
 const tabBtnOrders      = document.getElementById('tabBtnOrders');
+const tabBtnAnalytics   = document.getElementById('tabBtnAnalytics');
 const tabPanelProducts  = document.getElementById('tabPanelProducts');
 const tabPanelOrders    = document.getElementById('tabPanelOrders');
+const tabPanelAnalytics = document.getElementById('tabPanelAnalytics');
 const tabCountProducts  = document.getElementById('tabCountProducts');
 const tabCountOrders    = document.getElementById('tabCountOrders');
 
@@ -72,9 +79,37 @@ const prodStockInput    = document.getElementById('prodStock');
 const prodImageInput    = document.getElementById('prodImageUrl');
 const prodDescInput     = document.getElementById('prodDesc');
 
+const restockModal      = document.getElementById('restockModal');
+const restockItemsContainer = document.getElementById('restockItemsContainer');
+const closeRestockModalBtn = document.getElementById('closeRestockModalBtn');
+
 const deleteModal       = document.getElementById('deleteModal');
 const deleteModalText   = document.getElementById('deleteModalText');
 const confirmDeleteBtn  = document.getElementById('confirmDeleteBtn');
+
+// Analytics DOM elements
+const kpiAov            = document.getElementById('kpiAov');
+const kpiFulfillment    = document.getElementById('kpiFulfillment');
+const kpiDeliveredCount = document.getElementById('kpiDeliveredCount');
+const kpiTotalOrders    = document.getElementById('kpiTotalOrders');
+const kpiCodRevenue     = document.getElementById('kpiCodRevenue');
+const kpiCodCount       = document.getElementById('kpiCodCount');
+const kpiCardRevenue    = document.getElementById('kpiCardRevenue');
+const kpiCardCount      = document.getElementById('kpiCardCount');
+
+const distInsideDhaka   = document.getElementById('distInsideDhaka');
+const barInsideDhaka    = document.getElementById('barInsideDhaka');
+const distOutsideDhaka  = document.getElementById('distOutsideDhaka');
+const barOutsideDhaka   = document.getElementById('barOutsideDhaka');
+const distCod           = document.getElementById('distCod');
+const barCod            = document.getElementById('barCod');
+const distCard          = document.getElementById('distCard');
+const barCard           = document.getElementById('barCard');
+
+const topProductsList   = document.getElementById('topProductsList');
+const categoryBreakdownList = document.getElementById('categoryBreakdownList');
+
+let filterLowStockOnly = false;
 
 /* ================================================================
    TABS SWITCHING
@@ -82,21 +117,35 @@ const confirmDeleteBtn  = document.getElementById('confirmDeleteBtn');
 const switchTab = (tabName) => {
     currentTab = tabName;
     const isProd = tabName === 'products';
+    const isOrders = tabName === 'orders';
+    const isAnalytics = tabName === 'analytics';
 
     tabBtnProducts.classList.toggle('active', isProd);
     tabBtnProducts.setAttribute('aria-selected', isProd);
     tabPanelProducts.hidden = !isProd;
 
-    tabBtnOrders.classList.toggle('active', !isProd);
-    tabBtnOrders.setAttribute('aria-selected', !isProd);
-    tabPanelOrders.hidden = isProd;
+    tabBtnOrders.classList.toggle('active', isOrders);
+    tabBtnOrders.setAttribute('aria-selected', isOrders);
+    tabPanelOrders.hidden = !isOrders;
+
+    if (tabBtnAnalytics && tabPanelAnalytics) {
+        tabBtnAnalytics.classList.toggle('active', isAnalytics);
+        tabBtnAnalytics.setAttribute('aria-selected', isAnalytics);
+        tabPanelAnalytics.hidden = !isAnalytics;
+        if (isAnalytics) {
+            fetchAnalytics();
+        }
+    }
 };
 
 tabBtnProducts.addEventListener('click', () => switchTab('products'));
 tabBtnOrders.addEventListener('click', () => switchTab('orders'));
+if (tabBtnAnalytics) {
+    tabBtnAnalytics.addEventListener('click', () => switchTab('analytics'));
+}
 
 /* ================================================================
-   METRICS CALCULATION
+   METRICS CALCULATION & INVENTORY ALERTS
    ================================================================ */
 const updateMetrics = () => {
     // Total Revenue (excluding cancelled orders)
@@ -113,8 +162,18 @@ const updateMetrics = () => {
     tabCountProducts.textContent = allProducts.length;
 
     // Low stock count (<= 5)
-    const lowStockCount = allProducts.filter(p => (p.stock_quantity ?? 0) <= 5).length;
-    metricLowStock.textContent = lowStockCount;
+    const lowStockItems = allProducts.filter(p => (p.stock_quantity ?? 0) <= 5);
+    metricLowStock.textContent = lowStockItems.length;
+
+    // Update Low-Stock Banner
+    if (lowStockBanner && lowStockAlertCount) {
+        if (lowStockItems.length > 0) {
+            lowStockBanner.hidden = false;
+            lowStockAlertCount.textContent = lowStockItems.length;
+        } else {
+            lowStockBanner.hidden = true;
+        }
+    }
 };
 
 /* ================================================================
@@ -147,11 +206,12 @@ const renderProducts = () => {
             p.name.toLowerCase().includes(query) ||
             (p.category && p.category.toLowerCase().includes(query));
         const matchesCat = !cat || p.category === cat;
-        return matchesQuery && matchesCat;
+        const matchesStock = !filterLowStockOnly || (p.stock_quantity ?? 0) <= 5;
+        return matchesQuery && matchesCat && matchesStock;
     });
 
     if (filtered.length === 0) {
-        productsTableBody.innerHTML = '<tr><td colspan="6" class="table-loading">No products found matching your search.</td></tr>';
+        productsTableBody.innerHTML = `<tr><td colspan="6" class="table-loading">No products found matching your search${filterLowStockOnly ? ' (Low Stock filter active)' : ''}.</td></tr>`;
         return;
     }
 
@@ -186,7 +246,10 @@ const renderProducts = () => {
                     <strong>${money(p.price)}</strong>
                 </td>
                 <td>
-                    <span class="stock-badge ${stockClass}">${stockLabel}</span>
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:0.25rem;">
+                        <span class="stock-badge ${stockClass}">${stockLabel}</span>
+                        ${stock <= 5 ? `<button type="button" class="btn-table-restock" title="Quick add 10 units" onclick="quickRestockProduct(${p.id}, 10, this)">+10 Restock</button>` : ''}
+                    </div>
                 </td>
                 <td>
                     <div class="action-btns">
@@ -426,7 +489,187 @@ window.changeOrderStatus = async (orderId, newStatus, selectEl) => {
 };
 
 /* ================================================================
+   LOW-STOCK ALERTS & QUICK RESTOCK
+   ================================================================ */
+if (filterLowStockBtn) {
+    filterLowStockBtn.addEventListener('click', () => {
+        filterLowStockOnly = !filterLowStockOnly;
+        switchTab('products');
+        filterLowStockBtn.classList.toggle('active', filterLowStockOnly);
+        filterLowStockBtn.innerHTML = filterLowStockOnly 
+            ? '✓ Showing Low Stock' 
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> Filter Low Stock';
+        renderProducts();
+    });
+}
+
+const openRestockHub = () => {
+    if (!restockModal || !restockItemsContainer) return;
+    const lowItems = allProducts.filter(p => (p.stock_quantity ?? 0) <= 5);
+    const itemsToShow = lowItems.length > 0 ? lowItems : allProducts;
+
+    if (!itemsToShow.length) {
+        restockItemsContainer.innerHTML = '<div class="table-loading">No products available in catalog.</div>';
+    } else {
+        restockItemsContainer.innerHTML = itemsToShow.map(p => {
+            const stock = p.stock_quantity ?? 0;
+            return `
+                <div class="restock-row">
+                    <div class="restock-prod-info">
+                        <img src="${esc(p.image_url || 'images/nebula_keyboard.jpg')}" alt="" class="restock-prod-img" onerror="this.src='images/nebula_keyboard.jpg'">
+                        <div class="restock-prod-meta">
+                            <div class="restock-prod-name">${esc(p.name)}</div>
+                            <div class="restock-prod-stock">Current Stock: <strong>${stock} units</strong> ${stock <= 5 ? '(Low)' : ''}</div>
+                        </div>
+                    </div>
+                    <div class="restock-actions">
+                        <button type="button" class="restock-btn-pill" onclick="quickRestockProduct(${p.id}, 5, this)">+5</button>
+                        <button type="button" class="restock-btn-pill" onclick="quickRestockProduct(${p.id}, 10, this)">+10</button>
+                        <button type="button" class="restock-btn-pill" onclick="quickRestockProduct(${p.id}, 25, this)">+25</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    restockModal.hidden = false;
+};
+
+if (openRestockHubBtn) {
+    openRestockHubBtn.addEventListener('click', openRestockHub);
+}
+if (closeRestockModalBtn) {
+    closeRestockModalBtn.addEventListener('click', () => {
+        restockModal.hidden = true;
+    });
+}
+
+// 1-Click Quick Restock API Handler
+window.quickRestockProduct = async (id, delta, btnEl) => {
+    try {
+        if (btnEl) btnEl.disabled = true;
+        const res = await apiRequest(`/products/${id}/stock`, 'PATCH', { delta }, true);
+        const target = allProducts.find(p => p.id === id);
+        if (target && res.product) {
+            target.stock_quantity = res.product.stock_quantity;
+        }
+        renderProducts();
+        updateMetrics();
+        if (restockModal && !restockModal.hidden) {
+            openRestockHub();
+        }
+        showToast(`Stock updated: +${delta} units for ${target?.name || 'product'}!`, 'info');
+    } catch (err) {
+        showToast(err.message || 'Failed to update stock', 'error');
+        if (btnEl) btnEl.disabled = false;
+    }
+};
+
+/* ================================================================
+   ANALYTICS & INSIGHTS
+   ================================================================ */
+const fetchAnalytics = async () => {
+    try {
+        const data = await apiRequest('/orders/admin/analytics', 'GET', null, true);
+        const { overview = {}, topProducts = [], categoryStats = [] } = data;
+
+        // KPI calculations
+        if (kpiAov) kpiAov.textContent = money(overview.avg_order_value || 0);
+
+        const delivered = overview.delivered_orders || 0;
+        const totalValid = (overview.total_orders || 0) - (overview.cancelled_orders || 0);
+        const rate = totalValid > 0 ? Math.round((delivered / totalValid) * 100) : 0;
+        if (kpiFulfillment) kpiFulfillment.textContent = `${rate}%`;
+        if (kpiDeliveredCount) kpiDeliveredCount.textContent = delivered;
+        if (kpiTotalOrders) kpiTotalOrders.textContent = totalValid;
+
+        if (kpiCodRevenue) kpiCodRevenue.textContent = money(overview.cod_revenue || 0);
+        if (kpiCodCount) kpiCodCount.textContent = overview.cod_count || 0;
+
+        if (kpiCardRevenue) kpiCardRevenue.textContent = money(overview.card_revenue || 0);
+        if (kpiCardCount) kpiCardCount.textContent = overview.card_count || 0;
+
+        // Delivery Area Progress Bars
+        const insideCount = overview.inside_dhaka_count || 0;
+        const outsideCount = overview.outside_dhaka_count || 0;
+        const totalAreaOrders = insideCount + outsideCount || 1;
+        const insidePct = Math.round((insideCount / totalAreaOrders) * 100);
+        const outsidePct = 100 - insidePct;
+
+        if (distInsideDhaka) distInsideDhaka.textContent = `${insideCount} orders (${insidePct}%)`;
+        if (barInsideDhaka) barInsideDhaka.style.width = `${insidePct}%`;
+
+        if (distOutsideDhaka) distOutsideDhaka.textContent = `${outsideCount} orders (${outsidePct}%)`;
+        if (barOutsideDhaka) barOutsideDhaka.style.width = `${outsidePct}%`;
+
+        // Payment Methods Split Progress Bars
+        const codCount = overview.cod_count || 0;
+        const cardCount = overview.card_count || 0;
+        const totalPayOrders = codCount + cardCount || 1;
+        const codPct = Math.round((codCount / totalPayOrders) * 100);
+        const cardPct = 100 - codPct;
+
+        if (distCod) distCod.textContent = `${codCount} orders (${codPct}%)`;
+        if (barCod) barCod.style.width = `${codPct}%`;
+
+        if (distCard) distCard.textContent = `${cardCount} orders (${cardPct}%)`;
+        if (barCard) barCard.style.width = `${cardPct}%`;
+
+        // Top Selling Products Leaderboard
+        if (topProductsList) {
+            if (!topProducts.length) {
+                topProductsList.innerHTML = '<div class="table-loading">No sales recorded yet.</div>';
+            } else {
+                topProductsList.innerHTML = topProducts.map((p, idx) => `
+                    <div class="top-product-item">
+                        <div class="top-prod-left">
+                            <span class="top-prod-rank">#${idx + 1}</span>
+                            <img src="${esc(p.image_url || 'images/nebula_keyboard.jpg')}" alt="" class="top-prod-img" onerror="this.src='images/nebula_keyboard.jpg'">
+                            <div class="top-prod-info">
+                                <div class="top-prod-name">${esc(p.name)}</div>
+                                <div class="top-prod-meta">${esc(p.category || 'Gear')} • Stock: ${p.stock_quantity ?? 0}</div>
+                            </div>
+                        </div>
+                        <div class="top-prod-right">
+                            <div class="top-prod-sold">${p.total_sold} Sold</div>
+                            <div class="top-prod-rev">${money(p.total_revenue)}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Category Performance List
+        if (categoryBreakdownList) {
+            if (!categoryStats.length) {
+                categoryBreakdownList.innerHTML = '<div class="table-loading">No categories found.</div>';
+            } else {
+                categoryBreakdownList.innerHTML = categoryStats.map((c) => {
+                    const fillWidth = Math.min(100, Math.max(8, (c.units_sold * 25) || (c.product_count * 15)));
+                    return `
+                        <div class="cat-breakdown-item">
+                            <div class="cat-labels">
+                                <span class="cat-name-badge">
+                                    <span>${esc(c.category)}</span>
+                                    <span class="cat-count">(${c.product_count} items, ${c.units_sold} sold)</span>
+                                </span>
+                                <span class="cat-rev">${money(c.category_revenue)}</span>
+                            </div>
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill progress-bar-inside" style="width: ${fillWidth}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load analytics:', err);
+    }
+};
+
+/* ================================================================
    INITIALIZATION
    ================================================================ */
 fetchProducts();
 fetchOrders();
+fetchAnalytics();

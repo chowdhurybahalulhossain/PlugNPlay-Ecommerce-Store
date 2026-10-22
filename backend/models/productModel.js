@@ -32,10 +32,33 @@ const deleteProduct = async (id) => {
     await pool.query('DELETE FROM products WHERE id = $1', [id]);
 };
 
+const updateProductStock = async (id, { stockQuantity, delta }) => {
+    let result;
+    if (typeof delta === 'number') {
+        result = await pool.query(
+            `UPDATE products 
+             SET stock_quantity = GREATEST(0, stock_quantity + $1)
+             WHERE id = $2 
+             RETURNING *`,
+            [delta, id]
+        );
+    } else {
+        result = await pool.query(
+            `UPDATE products 
+             SET stock_quantity = GREATEST(0, $1::INTEGER)
+             WHERE id = $2 
+             RETURNING *`,
+            [parseInt(stockQuantity, 10) || 0, id]
+        );
+    }
+    return result.rows[0];
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
+    updateProductStock,
     deleteProduct
 };

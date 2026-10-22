@@ -1,6 +1,11 @@
-const { getAllProducts, getProductById } = require('../models/productModel');
-
-const { createProduct, updateProduct, deleteProduct } = require('../models/productModel');
+const {
+    getAllProducts,
+    getProductById,
+    createProduct,
+    updateProduct,
+    updateProductStock,
+    deleteProduct
+} = require('../models/productModel');
 
 const listProducts = async (req, res) => {
     try {
@@ -72,4 +77,33 @@ const removeProduct = async (req, res) => {
     }
 };
 
-module.exports = { listProducts, getProduct, addProduct, editProduct, removeProduct };
+const quickStockUpdate = async (req, res) => {
+    try {
+        const { delta, stock_quantity, stockQuantity } = req.body;
+        const targetDelta = typeof delta === 'number' ? delta : undefined;
+        const targetStock = stock_quantity ?? stockQuantity;
+
+        if (targetDelta === undefined && targetStock === undefined) {
+            return res.status(400).json({ error: 'Either delta or stock_quantity must be provided' });
+        }
+
+        const product = await updateProductStock(req.params.id, {
+            delta: targetDelta,
+            stockQuantity: targetStock
+        });
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        res.json({
+            message: `Stock updated successfully for ${product.name}`,
+            product
+        });
+    } catch (err) {
+        console.error('Error updating stock:', err);
+        res.status(500).json({ error: 'Failed to update stock', details: err.message });
+    }
+};
+
+module.exports = { listProducts, getProduct, addProduct, editProduct, removeProduct, quickStockUpdate };

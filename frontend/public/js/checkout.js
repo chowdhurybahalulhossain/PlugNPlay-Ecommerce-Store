@@ -166,5 +166,91 @@ form.addEventListener('submit', async (e) => {
     }
 });
 
+/* ---- Saved Addresses Quick Selector ---- */
+const savedAddressesSection = document.getElementById('savedAddressesSection');
+const savedAddrChips = document.getElementById('savedAddrChips');
+
+const getTagEmoji = (label) => {
+    const l = (label || '').toLowerCase();
+    if (l === 'home') return '🏠';
+    if (l === 'office' || l === 'work') return '🏢';
+    return '📍';
+};
+
+const selectAddress = (addr, chipEl) => {
+    // 1. Update chip active state
+    document.querySelectorAll('.saved-addr-chip').forEach(c => c.classList.remove('active'));
+    if (chipEl) chipEl.classList.add('active');
+
+    // 2. Populate shipping address textarea
+    const addressInput = document.getElementById('shippingAddress');
+    let text = addr.address_line;
+    if (addr.city) text += `, ${addr.city}`;
+    if (addr.recipient_name) text = `${addr.recipient_name} — ${text}`;
+    if (addr.phone) text += ` (Phone: ${addr.phone})`;
+    addressInput.value = text;
+
+    // 3. Select matching delivery area
+    const targetArea = addr.delivery_area === 'outside_dhaka' ? 'outside_dhaka' : 'inside_dhaka';
+    const targetRadio = document.querySelector(`input[name="deliveryArea"][value="${targetArea}"]`);
+    if (targetRadio) {
+        targetRadio.checked = true;
+        document.querySelectorAll('.area-card').forEach(c => c.classList.remove('active'));
+        targetRadio.closest('.area-card')?.classList.add('active');
+        localStorage.setItem('plugnplay_delivery_area', targetArea);
+        updateSummaryTotals();
+    }
+};
+
+const loadSavedAddresses = async () => {
+    if (!getToken()) return;
+    try {
+        const addresses = await apiRequest('/user/addresses', 'GET', null, true);
+        if (!Array.isArray(addresses) || addresses.length === 0) {
+            if (savedAddressesSection) savedAddressesSection.hidden = true;
+            return;
+        }
+
+        if (savedAddressesSection) savedAddressesSection.hidden = false;
+        savedAddrChips.innerHTML = addresses.map((addr) => {
+            const emoji = getTagEmoji(addr.label);
+            return `
+                <button type="button" class="saved-addr-chip" data-id="${addr.id}">
+                    <div class="chip-top">
+                        <span class="chip-tag">${emoji} ${esc(addr.label || 'Saved')}</span>
+                        ${addr.is_default ? '<span class="chip-badge-default">Default</span>' : ''}
+                    </div>
+                    ${addr.recipient_name ? `<div class="chip-name">${esc(addr.recipient_name)}</div>` : ''}
+                    <div class="chip-snippet">${esc(addr.address_line)}${addr.city ? ', ' + esc(addr.city) : ''}</div>
+                </button>
+            `;
+        }).join('');
+
+        // Attach click listeners to chips
+        savedAddrChips.querySelectorAll('.saved-addr-chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                const id = parseInt(chip.getAttribute('data-id'), 10);
+                const found = addresses.find(a => a.id === id);
+                if (found) {
+                    selectAddress(found, chip);
+                }
+            });
+        });
+
+        // Pre-select default address if textarea is currently empty
+        const currentVal = document.getElementById('shippingAddress').value.trim();
+        if (!currentVal) {
+            const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
+            const defaultChip = savedAddrChips.querySelector(`[data-id="${defaultAddr.id}"]`);
+            if (defaultAddr) {
+                selectAddress(defaultAddr, defaultChip);
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to load saved addresses:', err);
+    }
+};
+
 /* ---- Init ---- */
 loadSummary();
+loadSavedAddresses();

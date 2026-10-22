@@ -86,4 +86,89 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
-module.exports = { viewOrders, viewOrderDetails, viewAllOrders, updateOrderStatus };
+const getAdminAnalytics = async (req, res) => {
+    try {
+        const statsQuery = pool.query(`
+            SELECT 
+                COUNT(*)::INTEGER as total_orders,
+                COALESCE(SUM(total_amount), 0)::FLOAT as total_revenue,
+                COALESCE(AVG(total_amount), 0)::FLOAT as avg_order_value,
+                COUNT(*) FILTER (WHERE status = 'delivered')::INTEGER as delivered_orders,
+                COUNT(*) FILTER (WHERE status = 'shipped')::INTEGER as shipped_orders,
+                COUNT(*) FILTER (WHERE status = 'paid')::INTEGER as paid_orders,
+                COUNT(*) FILTER (WHERE status = 'pending')::INTEGER as pending_orders,
+                COUNT(*) FILTER (WHERE status = 'cancelled')::INTEGER as cancelled_orders,
+                COUNT(*) FILTER (WHERE payment_method = 'cod')::INTEGER as cod_count,
+                COALESCE(SUM(total_amount) FILTER (WHERE payment_method = 'cod'), 0)::FLOAT as cod_revenue,
+                COUNT(*) FILTER (WHERE payment_method = 'card')::INTEGER as card_count,
+                COALESCE(SUM(total_amount) FILTER (WHERE payment_method = 'card'), 0)::FLOAT as card_revenue,
+                COUNT(*) FILTER (WHERE delivery_area = 'inside_dhaka')::INTEGER as inside_dhaka_count,
+                COUNT(*) FILTER (WHERE delivery_area = 'outside_dhaka')::INTEGER as outside_dhaka_count
+            FROM orders
+            WHERE status != 'cancelled'
+        `);
+
+        const topProductsQuery = pool.query(`
+            SELECT 
+                p.id,
+                p.name,
+                p.category,
+                p.image_url,
+                p.stock_quantity,
+                COALESCE(SUM(oi.quantity), 0)::INTEGER as total_sold,
+                COALESCE(SUM(oi.quantity * oi.price_at_purchase), 0)::FLOAT as total_revenue
+            FROM products p
+            JOIN order_items oi ON p.id = oi.product_id
+            JOIN orders o ON oi.order_id = o.id
+            WHERE o.status != 'cancelled'
+            GROUP BY p.id, p.name, p.category, p.image_url, p.stock_quantity
+            ORDER BY total_sold DESC
+            LIMIT 5
+        `);
+
+        const categoryStatsQuery = pool.query(`
+            SELECT 
+                COALESCE(p.category, 'Uncategorized') as category,
+                COUNT(DISTINCT p.id)::INTEGER as product_count,
+                COALESCE(SUM(oi.quantity), 0)::INTEGER as units_sold,
+                COALESCE(SUM(oi.quantity * oi.price_at_purchase), 0)::FLOAT as category_revenue
+            FROM products p
+            LEFT JOIN order_items oi ON p.id = oi.product_id
+            LEFT JOIN orders o ON oi.order_id = o.id AND o.status != 'cancelled'
+            GROUP BY p.category
+            ORDER BY category_revenue DESC
+        `);
+
+        const lowStockQuery = pool.query(`
+            SELECT id, name, category, price, stock_quantity, image_url
+            FROM products
+            WHERE stock_quantity <= 5
+            ORDER BY stock_quantity ASC, name ASC
+        `);
+
+        const [statsRes, topProductsRes, categoryStatsRes, lowStockRes] = await Promise.all([
+            statsQuery,
+            topProductsQuery,
+            categoryStatsQuery,
+            lowStockQuery
+        ]);
+
+        res.json({
+            overview: statsRes.rows[0] || {},
+            topProducts: topProductsRes.rows || [],
+            categoryStats: categoryStatsRes.rows || [],
+            lowStockProducts: lowStockRes.rows || []
+        });
+    } catch (err) {
+        console.error('Error fetching admin analytics:', err);
+        res.status(500).json({ error: 'Failed to fetch analytics data' });
+    }
+};
+
+module.exports = {
+    viewOrders,
+    viewOrderDetails,
+    viewAllOrders,
+    updateOrderStatus,
+    getAdminAnalytics
+};

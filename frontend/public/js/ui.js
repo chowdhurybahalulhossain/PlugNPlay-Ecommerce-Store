@@ -112,6 +112,33 @@ const initAdminNav = () => {
     } catch (e) {}
 };
 
+// Display Profile link in navbar when logged in
+const initProfileNav = () => {
+    if (!getToken()) return;
+    const nav = document.querySelector('.nav-links');
+    if (nav && !document.getElementById('profileNavLink')) {
+        // If current page already has static profile link, mark it or return
+        const existing = nav.querySelector('a[href="profile.html"]');
+        if (existing) {
+            existing.id = 'profileNavLink';
+            return;
+        }
+        const profileLink = document.createElement('a');
+        profileLink.id = 'profileNavLink';
+        profileLink.href = 'profile.html';
+        profileLink.textContent = 'Profile';
+        if (window.location.pathname.endsWith('profile.html')) {
+            profileLink.classList.add('active');
+        }
+        const authLink = document.getElementById('authLink');
+        if (authLink) {
+            nav.insertBefore(profileLink, authLink);
+        } else {
+            nav.appendChild(profileLink);
+        }
+    }
+};
+
 // Footer Newsletter handler
 const initFooterNewsletter = () => {
     const form = document.getElementById('footerNewsletterForm');
@@ -135,5 +162,6 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 document.querySelectorAll('[data-spotlight]').forEach(initSpotlight);
 initAuthLink();
 initAdminNav();
+initProfileNav();
 initFooterNewsletter();
 updateCartCount();
