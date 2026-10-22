@@ -4,16 +4,38 @@ const {
     createProduct,
     updateProduct,
     updateProductStock,
-    deleteProduct
+    deleteProduct,
+    searchProducts
 } = require('../models/productModel');
 
 const listProducts = async (req, res) => {
     try {
+        const query = (req.query.q || '').trim();
+        if (query) {
+            const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 20));
+            const products = await searchProducts(query, limit);
+            return res.json(products);
+        }
         const products = await getAllProducts();
         res.json(products);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to fetch products' });
+    }
+};
+
+const searchProductsHandler = async (req, res) => {
+    try {
+        const query = (req.query.q || '').trim();
+        if (!query) {
+            return res.json([]);
+        }
+        const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 8));
+        const results = await searchProducts(query, limit);
+        res.json(results);
+    } catch (err) {
+        console.error('searchProductsHandler error:', err);
+        res.status(500).json({ error: 'Failed to search products' });
     }
 };
 
@@ -106,4 +128,12 @@ const quickStockUpdate = async (req, res) => {
     }
 };
 
-module.exports = { listProducts, getProduct, addProduct, editProduct, removeProduct, quickStockUpdate };
+module.exports = { 
+    listProducts, 
+    getProduct, 
+    addProduct, 
+    editProduct, 
+    removeProduct, 
+    quickStockUpdate,
+    searchProductsHandler 
+};

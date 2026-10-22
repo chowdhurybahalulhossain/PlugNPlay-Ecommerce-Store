@@ -1,9 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { listProducts, getProduct, addProduct, editProduct, removeProduct, quickStockUpdate } = require('../controllers/productController');
+const { 
+    listProducts, 
+    getProduct, 
+    addProduct, 
+    editProduct, 
+    removeProduct, 
+    quickStockUpdate,
+    searchProductsHandler 
+} = require('../controllers/productController');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 // Public routes
+router.get('/search', searchProductsHandler);
 router.get('/', listProducts);
 router.get('/:id', getProduct);
 

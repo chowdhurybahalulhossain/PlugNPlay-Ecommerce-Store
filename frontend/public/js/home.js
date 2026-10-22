@@ -270,6 +270,18 @@ const loadProducts = async () => {
         ratingsMap = ratings || {};
         wishlistIds = new Set(Array.isArray(wIds) ? wIds : []);
 
+        // Support direct ?search=... URL parameters from global search or links
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            state.query = searchParam;
+            if (shopSearchEl) shopSearchEl.value = searchParam;
+            if (clearSearchBtn) clearSearchBtn.hidden = false;
+            setTimeout(() => {
+                document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+
         renderChips();
         renderProducts();
     } catch (err) {
@@ -372,11 +384,86 @@ pricePillsEl?.addEventListener('click', (e) => {
 // In Stock Toggle
 inStockToggle?.addEventListener('click', () => toggleInStock());
 
+// In-Shop Live Search Popover & Autocomplete
+const shopSearchBox = document.querySelector('.shop-search-box');
+let shopPopover = null;
+if (shopSearchBox) {
+    shopPopover = document.createElement('div');
+    shopPopover.className = 'shop-search-popover';
+    shopPopover.id = 'shopSearchPopover';
+    shopPopover.hidden = true;
+    shopSearchBox.appendChild(shopPopover);
+}
+
+const renderShopPopover = (query) => {
+    if (!shopPopover) return;
+    const q = (query || '').trim().toLowerCase();
+    if (!q || q.length < 2) {
+        shopPopover.hidden = true;
+        return;
+    }
+
+    const matches = state.products.filter(p => {
+        const text = `${p.name} ${p.category} ${p.description || ''}`.toLowerCase();
+        return text.includes(q);
+    }).slice(0, 4);
+
+    if (matches.length === 0) {
+        shopPopover.hidden = true;
+        return;
+    }
+
+    const highlightMatch = (text, term) => {
+        const escText = esc(text);
+        if (!term) return escText;
+        const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return escText.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+    };
+
+    shopPopover.innerHTML = matches.map((p) => {
+        const r = ratingsMap[p.id];
+        const rating = r ? Number(r.avg_rating).toFixed(1) : '5.0';
+        return `
+            <a href="product.html?id=${p.id}" class="search-result-item" style="padding: 8px 10px;">
+                <div class="search-item-art" style="width: 40px; height: 40px;">
+                    ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}">` : imageOrIcon(p)}
+                </div>
+                <div class="search-item-info">
+                    <div class="search-item-meta">
+                        <span class="search-item-cat">${esc(p.category)}</span>
+                        <span class="search-item-stars">★ ${rating}</span>
+                    </div>
+                    <h4 class="search-item-title" style="font-size: 0.88rem;">${highlightMatch(p.name, q)}</h4>
+                </div>
+                <div class="search-item-right">
+                    <span class="search-item-price" style="font-size: 0.9rem;">${money(p.price)}</span>
+                </div>
+            </a>`;
+    }).join('') + `
+        <a href="#shop" class="popover-view-all" onclick="document.getElementById('shopSearchPopover').hidden=true;">
+            View all matching items in catalog ↓
+        </a>`;
+
+    shopPopover.hidden = false;
+};
+
+document.addEventListener('click', (e) => {
+    if (shopPopover && !shopSearchBox?.contains(e.target)) {
+        shopPopover.hidden = true;
+    }
+});
+
 // Live Search Inputs (Shop & Nav)
-shopSearchEl?.addEventListener('input', (e) => setQuery(e.target.value));
+shopSearchEl?.addEventListener('input', (e) => {
+    setQuery(e.target.value);
+    renderShopPopover(e.target.value);
+});
 navSearchEl?.addEventListener('input', (e) => setQuery(e.target.value));
 
-clearSearchBtn?.addEventListener('click', () => setQuery(''));
+clearSearchBtn?.addEventListener('click', () => {
+    setQuery('');
+    if (shopPopover) shopPopover.hidden = true;
+});
 resetFiltersBtn?.addEventListener('click', resetAllFilters);
 
 // Sort dropdown

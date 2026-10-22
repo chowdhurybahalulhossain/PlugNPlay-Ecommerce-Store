@@ -220,6 +220,291 @@ const initFooterNewsletter = () => {
     });
 };
 
+// Global Instant Search Autocomplete & Command Palette
+const initGlobalSearch = () => {
+    // 1. Insert Search button into navbar
+    const nav = document.querySelector('.site-header .nav') || document.querySelector('.nav');
+    if (nav && !document.getElementById('navGlobalSearchBtn')) {
+        const searchBtn = document.createElement('button');
+        searchBtn.type = 'button';
+        searchBtn.className = 'nav-search-btn';
+        searchBtn.id = 'navGlobalSearchBtn';
+        searchBtn.title = 'Search peripherals & gear (Ctrl+K)';
+        searchBtn.setAttribute('aria-label', 'Search gear');
+        searchBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="nav-search-label">Quick Search...</span>
+            <kbd class="nav-search-kbd">Ctrl K</kbd>
+        `;
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            nav.insertBefore(searchBtn, themeToggle);
+        } else {
+            nav.appendChild(searchBtn);
+        }
+    }
+
+    // 2. Insert Search Modal Backdrop into document body
+    let modalBackdrop = document.getElementById('searchModalBackdrop');
+    if (!modalBackdrop) {
+        modalBackdrop = document.createElement('div');
+        modalBackdrop.className = 'search-modal-backdrop';
+        modalBackdrop.id = 'searchModalBackdrop';
+        modalBackdrop.hidden = true;
+        modalBackdrop.innerHTML = `
+            <div class="search-modal-card" role="dialog" aria-modal="true" aria-label="Search Catalog">
+                <div class="search-modal-head">
+                    <svg class="search-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="globalSearchInput" class="search-modal-input" placeholder="Search keyboards, audio, mice, desk accessories..." autocomplete="off" spellcheck="false">
+                    <button type="button" class="btn-clear-search-modal" id="clearModalSearchBtn" hidden aria-label="Clear search input">&times;</button>
+                    <button type="button" class="search-modal-esc" id="closeSearchModalBtn" aria-label="Close search">Esc</button>
+                </div>
+                <div class="search-quick-tags">
+                    <span class="quick-tag-label">Trending:</span>
+                    <button type="button" class="quick-tag" data-tag="Keyboard">⌨️ Keyboards</button>
+                    <button type="button" class="quick-tag" data-tag="Mouse">🖱️ Mice</button>
+                    <button type="button" class="quick-tag" data-tag="Audio">🎧 Audio</button>
+                    <button type="button" class="quick-tag" data-tag="ScreenBar">💡 Lighting</button>
+                    <button type="button" class="quick-tag" data-tag="Mat">⚡ Desk Mats</button>
+                </div>
+                <div class="search-modal-results" id="modalSearchResults">
+                    <div class="search-empty-state">
+                        <div class="search-empty-icon">⌨️</div>
+                        <div class="search-empty-title">Search high-performance gear</div>
+                        <div class="search-empty-sub">Type a brand, category, or model name to instantly find peripherals, live ratings, and stock.</div>
+                    </div>
+                </div>
+                <div class="search-modal-foot">
+                    <div class="foot-shortcuts">
+                        <span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span>
+                        <span><kbd>↵</kbd> select</span>
+                        <span><kbd>esc</kbd> dismiss</span>
+                    </div>
+                    <span class="foot-brand">⚡ PlugNPlay Instant Gear Finder</span>
+                </div>
+            </div>`;
+        document.body.appendChild(modalBackdrop);
+    }
+
+    const searchInput = document.getElementById('globalSearchInput');
+    const clearBtn = document.getElementById('clearModalSearchBtn');
+    const closeBtn = document.getElementById('closeSearchModalBtn');
+    const resultsContainer = document.getElementById('modalSearchResults');
+    const triggerBtn = document.getElementById('navGlobalSearchBtn');
+
+    let debounceTimer = null;
+    let currentResults = [];
+    let selectedIndex = -1;
+
+    const highlightMatch = (text, term) => {
+        if (!term) return text;
+        const escaped = term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+    };
+
+    const formatMoney = (n) => '৳' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+    const openModal = () => {
+        modalBackdrop.hidden = false;
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            searchInput?.focus();
+            if (searchInput?.value) searchInput.select();
+        }, 60);
+    };
+
+    const closeModal = () => {
+        modalBackdrop.hidden = true;
+        document.body.style.overflow = '';
+        selectedIndex = -1;
+    };
+
+    triggerBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+
+    modalBackdrop.addEventListener('click', (e) => {
+        if (e.target === modalBackdrop) closeModal();
+    });
+
+    clearBtn?.addEventListener('click', () => {
+        if (searchInput) {
+            searchInput.value = '';
+            clearBtn.hidden = true;
+            renderInitialState();
+            searchInput.focus();
+        }
+    });
+
+    // Global keyboard shortcuts (Ctrl+K, Slash, Escape)
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            if (modalBackdrop.hidden) openModal();
+            else closeModal();
+            return;
+        }
+
+        if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+            e.preventDefault();
+            openModal();
+            return;
+        }
+
+        if (e.key === 'Escape' && !modalBackdrop.hidden) {
+            e.preventDefault();
+            closeModal();
+        }
+    });
+
+    const renderInitialState = () => {
+        resultsContainer.innerHTML = `
+            <div class="search-empty-state">
+                <div class="search-empty-icon">⌨️</div>
+                <div class="search-empty-title">Search high-performance gear</div>
+                <div class="search-empty-sub">Type a brand, category, or model name to instantly find peripherals, live ratings, and stock.</div>
+            </div>`;
+        currentResults = [];
+        selectedIndex = -1;
+    };
+
+    const updateSelectionVisual = () => {
+        const items = resultsContainer.querySelectorAll('.search-result-item');
+        items.forEach((item, idx) => {
+            if (idx === selectedIndex) {
+                item.classList.add('selected');
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    };
+
+    const renderResults = (products, query) => {
+        currentResults = products || [];
+        selectedIndex = -1;
+
+        if (currentResults.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="search-empty-state">
+                    <div class="search-empty-icon">🔍</div>
+                    <div class="search-empty-title">No gear found matching "${highlightMatch(query, query)}"</div>
+                    <div class="search-empty-sub">Try searching for "Keyboard", "Mouse", "ScreenBar", or click a trending tag above.</div>
+                </div>`;
+            return;
+        }
+
+        resultsContainer.innerHTML = currentResults.map((p, idx) => {
+            const stockQty = Number(p.stock_quantity ?? 0);
+            let stockClass = 'in-stock', stockLabel = 'In Stock';
+            if (stockQty <= 0) {
+                stockClass = 'sold-out'; stockLabel = 'Sold Out';
+            } else if (stockQty <= 5) {
+                stockClass = 'low-stock'; stockLabel = `Only ${stockQty} Left`;
+            }
+
+            const rating = Number(p.avg_rating || 5.0).toFixed(1);
+            const reviewsCount = p.total_reviews || 0;
+
+            const artHTML = p.image_url
+                ? `<img src="${p.image_url}" alt="${p.name}" loading="lazy">`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+
+            return `
+                <a href="product.html?id=${p.id}" class="search-result-item" data-index="${idx}">
+                    <div class="search-item-art">${artHTML}</div>
+                    <div class="search-item-info">
+                        <div class="search-item-meta">
+                            <span class="search-item-cat">${p.category || 'Gear'}</span>
+                            <span class="search-item-stars">★ ${rating} <span style="opacity:0.7">(${reviewsCount})</span></span>
+                        </div>
+                        <h4 class="search-item-title">${highlightMatch(p.name, query)}</h4>
+                    </div>
+                    <div class="search-item-right">
+                        <span class="search-item-price">${formatMoney(p.price)}</span>
+                        <span class="search-stock-pill ${stockClass}">${stockLabel}</span>
+                    </div>
+                </a>`;
+        }).join('');
+    };
+
+    const executeSearch = async (term) => {
+        const query = term.trim();
+        if (!query) {
+            renderInitialState();
+            return;
+        }
+
+        resultsContainer.innerHTML = `
+            <div class="search-empty-state">
+                <div class="search-empty-icon" style="font-size:1.5rem">⚡</div>
+                <div class="search-empty-title">Scanning catalog...</div>
+            </div>`;
+
+        try {
+            const products = await apiRequest(`/products/search?q=${encodeURIComponent(query)}&limit=10`);
+            renderResults(products, query);
+        } catch (err) {
+            console.error('Search error:', err);
+            resultsContainer.innerHTML = `
+                <div class="search-empty-state">
+                    <div class="search-empty-title" style="color:var(--accent)">Unable to complete search</div>
+                    <div class="search-empty-sub">Please verify your connection and try again.</div>
+                </div>`;
+        }
+    };
+
+    // Input typing & debounce
+    searchInput?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (clearBtn) clearBtn.hidden = !val;
+
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            executeSearch(val);
+        }, 180);
+    });
+
+    // Arrow navigation inside Search Modal
+    searchInput?.addEventListener('keydown', (e) => {
+        if (!currentResults.length) {
+            if (e.key === 'Enter' && searchInput.value.trim()) {
+                window.location.href = `index.html?search=${encodeURIComponent(searchInput.value.trim())}`;
+            }
+            return;
+        }
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % currentResults.length;
+            updateSelectionVisual();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + currentResults.length) % currentResults.length;
+            updateSelectionVisual();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0 && currentResults[selectedIndex]) {
+                window.location.href = `product.html?id=${currentResults[selectedIndex].id}`;
+            } else if (searchInput.value.trim()) {
+                window.location.href = `index.html?search=${encodeURIComponent(searchInput.value.trim())}`;
+            }
+        }
+    });
+
+    // Quick tag pills (e.g. ⌨️ Keyboards)
+    modalBackdrop.querySelectorAll('.quick-tag').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const tag = btn.dataset.tag;
+            if (searchInput && tag) {
+                searchInput.value = tag;
+                if (clearBtn) clearBtn.hidden = false;
+                searchInput.focus();
+                executeSearch(tag);
+            }
+        });
+    });
+};
+
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     setTheme(getTheme() === 'dark' ? 'light' : 'dark');
 });
@@ -229,5 +514,6 @@ initAdminNav();
 initWishlistNav();
 initProfileNav();
 initFooterNewsletter();
+initGlobalSearch();
 updateCartCount();
 updateWishlistCount();

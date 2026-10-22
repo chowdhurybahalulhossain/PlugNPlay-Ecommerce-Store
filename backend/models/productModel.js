@@ -54,11 +54,38 @@ const updateProductStock = async (id, { stockQuantity, delta }) => {
     return result.rows[0];
 };
 
+const searchProducts = async (query, limit = 8) => {
+    const q = `%${query.trim()}%`;
+    const result = await pool.query(
+        `SELECT p.*,
+                COALESCE(ROUND(AVG(r.rating)::NUMERIC, 1), 0.0)::FLOAT AS avg_rating,
+                COUNT(r.id)::INTEGER AS total_reviews
+         FROM products p
+         LEFT JOIN product_reviews r ON p.id = r.product_id
+         WHERE p.name ILIKE $1 
+            OR p.description ILIKE $1 
+            OR p.category ILIKE $1
+         GROUP BY p.id
+         ORDER BY 
+            CASE 
+                WHEN p.name ILIKE $1 THEN 1 
+                WHEN p.category ILIKE $1 THEN 2 
+                ELSE 3 
+            END,
+            p.stock_quantity DESC,
+            p.name ASC
+         LIMIT $2`,
+        [q, limit]
+    );
+    return result.rows;
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
     updateProductStock,
-    deleteProduct
+    deleteProduct,
+    searchProducts
 };
