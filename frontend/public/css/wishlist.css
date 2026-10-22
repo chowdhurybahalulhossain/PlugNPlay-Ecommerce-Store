@@ -63,6 +63,11 @@
     gap: 0.75rem;
 }
 
+.wishlist-actions[hidden],
+.wishlist-empty[hidden] {
+    display: none !important;
+}
+
 /* Wishlist Grid */
 .wishlist-grid {
     display: grid;

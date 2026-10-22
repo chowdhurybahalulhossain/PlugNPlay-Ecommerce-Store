@@ -81,6 +81,14 @@ const orderHTML = (order) => {
                     <path d="M6 9l6 6 6-6"/>
                 </svg>
             </button>
+            <button type="button" class="btn-print-invoice" data-action="print-invoice" data-id="${order.id}" title="Print Official Tax Receipt & Invoice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                <span>Print Invoice</span>
+            </button>
         </div>
 
         <div class="order-items-drawer" id="items-${order.id}" hidden></div>
@@ -145,6 +153,7 @@ const loadOrders = async () => {
             return;
         }
 
+        currentOrdersList = orders || [];
         ordersSubtitle.textContent =
             orders.length === 1 ? '1 order placed' : `${orders.length} orders placed`;
         ordersList.innerHTML = orders.map(orderHTML).join('');
@@ -207,6 +216,159 @@ ordersList.addEventListener('click', async (e) => {
         drawer.innerHTML =
             `<p class="order-item-unit" style="color:var(--err);padding:12px">Failed to load: ${esc(err.message)}</p>`;
     }
+});
+
+/* ---- Printable Invoice Modal System ---- */
+const invoiceModal = document.getElementById('invoiceModalBackdrop');
+const invoicePrintArea = document.getElementById('invoicePrintArea');
+const closeInvoiceBtn = document.getElementById('closeInvoiceBtn');
+const triggerPrintBtn = document.getElementById('triggerPrintBtn');
+
+const renderInvoiceHTML = (order, items, user) => {
+    const subtotal = items.reduce((sum, i) => sum + (Number(i.price_at_purchase) * Number(i.quantity)), 0);
+    const deliveryFee = Number(order.delivery_fee ?? (order.delivery_area === 'outside_dhaka' ? 120 : 60));
+    const grandTotal = Number(order.total_amount || (subtotal + deliveryFee));
+
+    const invoiceDate = order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : 'N/A';
+
+    const customerName = user?.name || 'Valued Hardware Enthusiast';
+    const customerEmail = user?.email || '';
+
+    return `
+        <div class="invoice-header">
+            <div>
+                <div class="inv-brand-name">⚡ PlugNPlay</div>
+                <div class="inv-brand-sub">
+                    PlugNPlay Engineered Hardware &amp; Peripherals<br>
+                    Dhaka, Bangladesh • support@plugnplay.com
+                </div>
+            </div>
+            <div class="inv-meta-right">
+                <div class="inv-title">Official Tax Invoice</div>
+                <div class="inv-no">#INV-${String(order.id).padStart(6, '0')}</div>
+                <div class="inv-date">Issued: ${esc(invoiceDate)}</div>
+            </div>
+        </div>
+
+        <div class="invoice-two-col">
+            <div>
+                <div class="inv-col-title">Billed / Shipped To</div>
+                <div class="inv-col-content">
+                    <strong>${esc(customerName)}</strong><br>
+                    ${customerEmail ? `<span>${esc(customerEmail)}</span><br>` : ''}
+                    <span>${esc(order.shipping_address || 'Address provided at checkout')}</span><br>
+                    <span style="font-size:0.8rem; color:var(--muted)">Area: ${order.delivery_area === 'outside_dhaka' ? 'Outside Dhaka (Courier)' : 'Dhaka Metro (Express)'}</span>
+                </div>
+            </div>
+            <div>
+                <div class="inv-col-title">Payment &amp; Order Details</div>
+                <div class="inv-col-content">
+                    <strong>Payment Method:</strong> ${order.payment_method === 'cod' ? '💵 Cash on Delivery (COD)' : '💳 Online Card Payment'}<br>
+                    <strong>Order Status:</strong> <span style="text-transform:uppercase; font-weight:700;">${esc(order.status || 'paid')}</span><br>
+                    ${order.stripe_payment_id ? `<strong>Transaction ID:</strong> ${esc(order.stripe_payment_id)}<br>` : ''}
+                    <strong>Hardware Warranty:</strong> Official 1-Year Full Coverage
+                </div>
+            </div>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th style="width: 48%;">Hardware Item</th>
+                    <th style="text-align: right;">Unit Price</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${items.map(item => `
+                    <tr>
+                        <td>
+                            <div class="inv-item-name">${esc(item.product_name || item.name)}</div>
+                        </td>
+                        <td style="text-align: right;">${money(item.price_at_purchase)}</td>
+                        <td style="text-align: center;">×${item.quantity}</td>
+                        <td style="text-align: right; font-weight: 600;">${money(item.price_at_purchase * item.quantity)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <div class="invoice-totals">
+            <div class="inv-total-row">
+                <span>Items Subtotal:</span>
+                <span>${money(subtotal)}</span>
+            </div>
+            <div class="inv-total-row">
+                <span>Shipping Fee:</span>
+                <span>${money(deliveryFee)}</span>
+            </div>
+            <div class="inv-total-row grand">
+                <span>Grand Total:</span>
+                <span>${money(grandTotal)}</span>
+            </div>
+        </div>
+
+        <div class="invoice-footer-notes">
+            <div>
+                <strong>🛡️ Official PlugNPlay Hardware Guarantee:</strong><br>
+                Includes 1-Year Official Replacement Warranty &amp; 7-Day testing period.
+            </div>
+            <div class="inv-barcode" aria-hidden="true">
+                ||||| | |||||||||| |||| | |||||
+            </div>
+        </div>`;
+};
+
+// Open Invoice on click
+ordersList.addEventListener('click', async (e) => {
+    const printBtn = e.target.closest('[data-action="print-invoice"]');
+    if (!printBtn) return;
+
+    const orderId = Number(printBtn.dataset.id);
+    let order = currentOrdersList.find(o => o.id === orderId);
+
+    if (invoicePrintArea) {
+        invoicePrintArea.innerHTML = '<div style="text-align:center; padding: 3rem 1rem; color:var(--muted)">Generating official tax invoice…</div>';
+    }
+    if (invoiceModal) invoiceModal.hidden = false;
+
+    try {
+        let items = orderItemsCache.get(orderId);
+        if (!items || !order) {
+            const data = await apiRequest(`/orders/${orderId}`, 'GET', null, true);
+            order = data.order || order;
+            items = data.items || [];
+            orderItemsCache.set(orderId, items);
+        }
+
+        let user = null;
+        try {
+            user = JSON.parse(localStorage.getItem('user'));
+        } catch (e) {}
+
+        if (invoicePrintArea && order) {
+            invoicePrintArea.innerHTML = renderInvoiceHTML(order, items, user);
+        }
+    } catch (err) {
+        if (invoicePrintArea) {
+            invoicePrintArea.innerHTML = `<div style="text-align:center; padding: 2rem; color:var(--err)">Failed to load invoice: ${esc(err.message)}</div>`;
+        }
+    }
+});
+
+closeInvoiceBtn?.addEventListener('click', () => {
+    if (invoiceModal) invoiceModal.hidden = true;
+});
+
+invoiceModal?.addEventListener('click', (e) => {
+    if (e.target === invoiceModal) invoiceModal.hidden = true;
+});
+
+triggerPrintBtn?.addEventListener('click', () => {
+    window.print();
 });
 
 /* ---- Init ---- */

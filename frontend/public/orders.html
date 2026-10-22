@@ -137,6 +137,22 @@
         </div>
     </footer>
 
+    <!-- ================= PRINTABLE INVOICE MODAL ================= -->
+    <div class="invoice-modal-backdrop" id="invoiceModalBackdrop" hidden>
+        <div class="invoice-modal-card" id="invoiceCard">
+            <div class="invoice-actions-bar">
+                <button type="button" class="btn btn-secondary btn-sm" id="closeInvoiceBtn">Close</button>
+                <button type="button" class="btn btn-primary btn-sm" id="triggerPrintBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print / Save PDF
+                </button>
+            </div>
+            <div id="invoicePrintArea">
+                <!-- Dynamically populated via orders.js -->
+            </div>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/orders.js"></script>

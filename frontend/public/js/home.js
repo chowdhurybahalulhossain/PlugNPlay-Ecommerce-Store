@@ -398,7 +398,7 @@ if (shopSearchBox) {
 const renderShopPopover = (query) => {
     if (!shopPopover) return;
     const q = (query || '').trim().toLowerCase();
-    if (!q || q.length < 2) {
+    if (!q) {
         shopPopover.hidden = true;
         return;
     }
@@ -409,7 +409,13 @@ const renderShopPopover = (query) => {
     }).slice(0, 4);
 
     if (matches.length === 0) {
-        shopPopover.hidden = true;
+        shopPopover.innerHTML = `
+            <div class="search-empty-state" style="padding: 1.25rem 1rem; text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: 0.35rem;">🔍</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem;">No gear found for "${esc(query)}"</div>
+                <div style="font-size: 0.82rem; color: var(--muted); line-height: 1.4;">Try searching for "Keyboard", "Mouse", or "Audio"</div>
+            </div>`;
+        shopPopover.hidden = false;
         return;
     }
 

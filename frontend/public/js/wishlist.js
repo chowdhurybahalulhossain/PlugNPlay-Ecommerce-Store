@@ -15,17 +15,24 @@ const money = (n) => '৳' + Number(n || 0).toLocaleString('en-US', { maximumFra
 
 let wishlistItems = [];
 
+const showSignInPrompt = (title = 'Sign in to view your Wishlist', subtitle = 'Sign in to your PlugNPlay account to save gear, track favorites, and move them to cart with one click.') => {
+    gridEl.innerHTML = '';
+    emptyEl.hidden = false;
+    const h2 = emptyEl.querySelector('h2');
+    const p = emptyEl.querySelector('p');
+    const cta = emptyEl.querySelector('a');
+    if (h2) h2.textContent = title;
+    if (p) p.textContent = subtitle;
+    if (cta) {
+        cta.textContent = 'Sign In to Account';
+        cta.href = 'login.html';
+    }
+    if (headerActions) headerActions.hidden = true;
+};
+
 const loadWishlist = async () => {
     if (!getToken()) {
-        gridEl.innerHTML = '';
-        emptyEl.hidden = false;
-        emptyEl.querySelector('h2').textContent = 'Sign in to view your Wishlist';
-        emptyEl.querySelector('p').textContent = 'Sign in to your PlugNPlay account to save gear, track favorites, and move them to cart with one click.';
-        const cta = emptyEl.querySelector('a');
-        if (cta) {
-            cta.textContent = 'Sign In';
-            cta.href = 'login.html';
-        }
+        showSignInPrompt();
         return;
     }
 
@@ -34,7 +41,15 @@ const loadWishlist = async () => {
         renderWishlist();
         updateWishlistCount();
     } catch (err) {
+        if (err.message && err.message.toLowerCase().includes('token')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            showSignInPrompt('Your session has expired', 'Please sign in again to access your saved hardware and favorites.');
+            if (typeof initAuthLink === 'function') initAuthLink();
+            return;
+        }
         gridEl.innerHTML = `<div class="table-loading">Failed to load wishlist: ${esc(err.message)}</div>`;
+        if (headerActions) headerActions.hidden = true;
     }
 };
 

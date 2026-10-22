@@ -16,6 +16,12 @@ const apiRequest = async (endpoint, method = 'GET', body = null, auth = false) =
     const res = await fetch(`${API_BASE}${endpoint}`, options);
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data.error || 'Something went wrong');
+    if (!res.ok) {
+        if (res.status === 401 || (data.error && data.error.toLowerCase().includes('token'))) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
+        throw new Error(data.error || 'Something went wrong');
+    }
     return data;
 };

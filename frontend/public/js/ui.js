@@ -223,8 +223,9 @@ const initFooterNewsletter = () => {
 // Global Instant Search Autocomplete & Command Palette
 const initGlobalSearch = () => {
     // 1. Insert Search button into navbar
-    const nav = document.querySelector('.site-header .nav') || document.querySelector('.nav');
-    if (nav && !document.getElementById('navGlobalSearchBtn')) {
+    const themeToggle = document.getElementById('themeToggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (!document.getElementById('navGlobalSearchBtn') && (themeToggle || navLinks)) {
         const searchBtn = document.createElement('button');
         searchBtn.type = 'button';
         searchBtn.className = 'nav-search-btn';
@@ -236,11 +237,10 @@ const initGlobalSearch = () => {
             <span class="nav-search-label">Quick Search...</span>
             <kbd class="nav-search-kbd">Ctrl K</kbd>
         `;
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            nav.insertBefore(searchBtn, themeToggle);
-        } else {
-            nav.appendChild(searchBtn);
+        if (themeToggle && themeToggle.parentNode) {
+            themeToggle.parentNode.insertBefore(searchBtn, themeToggle);
+        } else if (navLinks) {
+            navLinks.appendChild(searchBtn);
         }
     }
 
